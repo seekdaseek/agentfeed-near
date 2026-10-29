@@ -74,7 +74,7 @@ Verified by named tests in `test/gateway.test.js` ("crash drill") and by the liv
 
 ## Crash drill, live on NEAR testnet
 
-`node scripts/drill.mjs` runs a real `node src/main.js` gateway and kills it with `kill -9` at the dangerous points of one payment, with a pass-through proxy in front of the NEAR RPC that can hold the relayer's broadcast or answer it with the node's own `TIMEOUT_ERROR`. The agent signs **one** payment per scenario and presents the same signed payment again; the USDC balances are read from the chain after each step. Transcript: [`evidence/drill-20261029.txt`](evidence/drill-20261029.txt), **32 of 32 checks passed**.
+`node scripts/drill.mjs` runs a real `node src/main.js` gateway and kills it with `kill -9` at the dangerous points of one payment, with a pass-through proxy in front of the NEAR RPC that can hold the relayer's broadcast or answer it with the node's own `TIMEOUT_ERROR`. The agent signs **one** payment per scenario and presents the same signed payment again; the USDC balances are read from the chain after each step. Transcript: [`evidence/drill-20261029-node24.txt`](evidence/drill-20261029-node24.txt), **32 of 32 checks passed**.
 
 | scenario | what the chain showed at the failure | after presenting the same payment again |
 |---|---|---|

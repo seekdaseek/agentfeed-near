@@ -15,7 +15,7 @@
 //   S6  the delivered payment is presented again                                                 expect: refused, no change
 //
 // --record appends the delivered payments to evidence/known-extra-transfers.csv (they are real transfers into the treasury that the
-// deployed gateway's ledger does not contain) and writes evidence/drill-<date>.txt.
+// deployed gateway's ledger does not contain) and writes evidence/drill-<date>-node<major>.txt.
 import { spawn } from 'node:child_process';
 import http from 'node:http';
 import net from 'node:net';
@@ -26,6 +26,9 @@ import { join } from 'node:path';
 import Database from 'better-sqlite3';
 import { JsonRpcProvider } from '@near-js/providers';
 import { createAgent, loadSecretKey } from '../src/client.js';
+
+// On a machine without ~/.near-credentials (the VPS) the keys come from RELAYER_PRIVATE_KEY and AGENT_PRIVATE_KEY.
+const keyFor = (account, envName) => process.env[envName] || loadSecretKey(account);
 import { NEAR_TESTNET, USDC } from '../src/config.js';
 
 const RECORD = process.argv.includes('--record');
@@ -111,15 +114,16 @@ async function main() {
   const port = await freePort();
   const env = {
     PATH: process.env.PATH, HOME: process.env.HOME, PORT: String(port), HOST: '127.0.0.1', PUBLIC_URL: `http://127.0.0.1:${port}`, DB_PATH: dbPath,
-    TREASURY_ACCOUNT_ID: TREASURY, RELAYER_ACCOUNT_ID: RELAYER, RELAYER_PRIVATE_KEY: loadSecretKey(RELAYER),
+    TREASURY_ACCOUNT_ID: TREASURY, RELAYER_ACCOUNT_ID: RELAYER, RELAYER_PRIVATE_KEY: keyFor(RELAYER, 'RELAYER_PRIVATE_KEY'),
     NEAR_RPC_URL: `http://127.0.0.1:${proxy.server.address().port}`, UPSTREAM_URL: `http://127.0.0.1:${up.server.address().port}`, UPSTREAM_PREFIX: '/api/sample',
   };
-  const agent = createAgent({ accountId: BUYER, secretKey: loadSecretKey(BUYER), baseUrl: `http://127.0.0.1:${port}`, rpcUrl: NEAR_TESTNET.rpcUrl, retries: 0 });
+  const agent = createAgent({ accountId: BUYER, secretKey: keyFor(BUYER, 'AGENT_PRIVATE_KEY'), baseUrl: `http://127.0.0.1:${port}`, rpcUrl: NEAR_TESTNET.rpcUrl, retries: 0 });
   let gw = await startGateway(env);
   const restart = async () => { await kill9(gw); proxy.mode = 'pass'; up.hold = false; up.emit('release'); await sleep(300); gw = await startGateway(env); };
   const delivered = [];
   const stamp = new Date().toISOString();
   say(`# live drill ${stamp}  buyer ${BUYER}  treasury ${TREASURY}  relayer ${RELAYER}  price ${usdc(PRICE)} USDC`);
+  say(`# runtime: node ${process.version} on ${process.platform}/${process.arch} (the gateway child runs the same node binary)`);
   say(`# gateway: node src/main.js (pid ${gw.pid}) on :${port}, NEAR RPC through a local proxy, upstream = local fake`);
 
   const want = (id) => !ONLY.length || ONLY.includes(id);
@@ -213,7 +217,7 @@ async function main() {
       return [new Date((dbr.ts_settled || dbr.ts_created) * 1000).toISOString(), dbr.route, dbr.payer, '0.01', d.tx, RELAYER, `${NEAR_TESTNET.explorer}/transactions/${d.tx}`, dbr.state, dbr.settle_ms ?? ''].join(',');
     });
     appendFileSync(new URL('../evidence/known-extra-transfers.csv', import.meta.url), csvRows.join('\n') + '\n');
-    writeFileSync(new URL(`../evidence/drill-${stamp.slice(0, 10).replaceAll('-', '')}.txt`, import.meta.url), lines.join('\n') + '\n');
+    writeFileSync(new URL(`../evidence/drill-${stamp.slice(0, 10).replaceAll('-', '')}-node${process.versions.node.split('.')[0]}.txt`, import.meta.url), lines.join('\n') + '\n');
     say(`# recorded ${csvRows.length} transfers in evidence/known-extra-transfers.csv and the transcript in evidence/drill-*.txt`);
   }
   process.exit(failed.length ? 1 : 0);

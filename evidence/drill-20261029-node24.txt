@@ -1,3 +1,4 @@
+# (run on the Mac under Node 24.16.0 / darwin arm64; the Node 22.23.1 run on the box has its own transcript, drill-*-node22.txt)
 # live drill 2026-10-29T13:24:41.316Z  buyer agentfeed-near-buyer.testnet  treasury agentfeed-near-treasury.testnet  relayer agentfeed-near-relayer.testnet  price 0.010000 USDC
 # gateway: node src/main.js (pid 9530) on :55557, NEAR RPC through a local proxy, upstream = local fake
 
