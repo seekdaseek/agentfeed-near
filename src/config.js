@@ -49,6 +49,9 @@ export function loadConfig(env = process.env) {
     upstreamTimeoutMs: Number(env.UPSTREAM_TIMEOUT_MS || 15000),
     dbPath: env.DB_PATH || './agentfeed-near.db',
     dailyUpstreamCap: Number(env.DAILY_UPSTREAM_CAP || 5000),
+    // The verifier refuses a delegate action whose remaining window is longer than maxTimeoutSeconds blocks, and the stock client signs exactly that long
+    // from ITS view of the chain. If the gateway's RPC connection is a few blocks behind the client's, a good payment looks too long. Slack absorbs that skew.
+    windowSlackBlocks: Number(env.WINDOW_SLACK_BLOCKS || 20),
     settleWaitMs: Number(env.SETTLE_WAIT_MS || 30000), // keep below maxTimeoutSeconds: a delegate action expires after that many blocks
   };
 }

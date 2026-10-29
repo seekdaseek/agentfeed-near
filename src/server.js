@@ -25,6 +25,12 @@ export function createGateway({ cfg, chain, store, fetchImpl = fetch, now = () =
     payTo: cfg.treasury,
     maxTimeoutSeconds: cfg.maxTimeoutSeconds,
   });
+  // What the verifier checks against: the advertised requirements, with the block window widened by the configured slack.
+  const verifyRequirements = (route) => ({ ...requirementsFor(route), maxTimeoutSeconds: cfg.maxTimeoutSeconds + cfg.windowSlackBlocks });
+  async function noteSkew(code, sda) {
+    if (code !== 'invalid_exact_near_payload_delegate_action_timeout_window_exceeds_max_timeout') return;
+    try { console.warn('window refusal', JSON.stringify({ delegateMaxBlockHeight: String(decodeSignedDelegateB64(sda).delegate.maxBlockHeight), gatewayFinalHeight: String(await chain.blockHeight(cfg.network)), advertised: cfg.maxTimeoutSeconds, slack: cfg.windowSlackBlocks })); } catch { /* diagnostics only */ }
+  }
   const challenge = (route, code, message) => ({
     x402Version: 2,
     error: code || 'payment_required',
@@ -150,11 +156,12 @@ export function createGateway({ cfg, chain, store, fetchImpl = fetch, now = () =
     const seen = store.get(hash);
     if (seen) return prior(res, route, cp, seen, t0);
 
-    const requirements = requirementsFor(route);
+    const requirements = verifyRequirements(route);
     let verified;
     try { verified = await chain.verify(payload, requirements); } catch (e) { return send402(res, route, 'chain_unavailable', `NEAR RPC error: ${e.message}`, { charged: false }); }
     if (verified?.isValid !== true) {
       const code = verified?.invalidReason || 'verification_failed';
+      await noteSkew(code, sda);
       return send402(res, route, code, verified?.invalidMessage || `x402 NEAR exact verification failed: ${code}`, { charged: false });
     }
     const payer = verified.payer;

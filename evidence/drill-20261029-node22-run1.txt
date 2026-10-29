@@ -1,0 +1,54 @@
+# RUN 1 of 2 on the box (Node 22.23.1, linux/x64): 29 of 32 checks passed. S4 FAILED with a refusal (402 ...timeout_window_exceeds_max_timeout, no money moved in S4). Kept exactly as found; run 2 is after the fix (WINDOW_SLACK_BLOCKS).
+# live drill 2026-10-29T13:52:19.672Z  buyer agentfeed-near-buyer.testnet  treasury agentfeed-near-treasury.testnet  relayer agentfeed-near-relayer.testnet  price 0.010000 USDC
+# runtime: node v22.23.1 on linux/x64 (the gateway child runs the same node binary)
+# gateway: node src/main.js (pid 696107) on :37681, NEAR RPC through a local proxy, upstream = local fake
+
+S1  kill -9 while the data is being fetched
+  PASS  at the kill the gateway had verified and reserved only (state reserved, no tx hash)  ({"state":"reserved","tx_hash":null,"signed_len":null,"error":null})
+  PASS  chain at the kill: charged 0
+  PASS  same signed payment, presented again: HTTP 200 with data  (status 200)
+  PASS  total effect on the chain: charged once
+  PASS  served as a recovery of the stored payment (recovered:false)
+  PASS  ledger row is delivered  (delivered)
+  tx 67mGJ3nRwBGcL3T3tUTBkzAWrxgx86pUNKiyzkkUfXDY  https://explorer.testnet.near.org/transactions/67mGJ3nRwBGcL3T3tUTBkzAWrxgx86pUNKiyzkkUfXDY
+
+S2  kill -9 after the relayer tx hash and bytes are stored, before the broadcast leaves the process
+  PASS  at the kill: state submitted, tx hash stored, signed bytes stored (716 chars)
+  PASS  chain at the kill: charged 0
+  PASS  the stored transaction hash is unknown to the chain (real UNKNOWN_TRANSACTION)  (false)
+  PASS  same signed payment, presented again: HTTP 200 with data  (status 200)
+  PASS  total effect on the chain: charged once
+  PASS  served as a recovery of the stored payment (recovered:true)
+  PASS  served transaction is the one stored before the kill  (EV3haNmDYzdpnKn1HuYkfKMNsHpkKxLt7MwpR6SLC5h4)
+  PASS  ledger row is delivered  (delivered)
+  tx EV3haNmDYzdpnKn1HuYkfKMNsHpkKxLt7MwpR6SLC5h4  https://explorer.testnet.near.org/transactions/EV3haNmDYzdpnKn1HuYkfKMNsHpkKxLt7MwpR6SLC5h4
+
+S3  kill -9 after the broadcast landed on the chain, before the reply reached the gateway
+  PASS  at the kill: state submitted, tx hash stored
+  PASS  chain at the kill: charged once (the agent has paid and has no data)
+  PASS  same signed payment, presented again: HTTP 200 with data  (status 200)
+  PASS  total effect on the chain: charged once
+  PASS  served as a recovery of the stored payment (recovered:true)
+  PASS  served transaction is the one stored before the kill  (9XYDVT6kNpHaDY3aC3rQhmGrKQJhZMEFbBA4s79M7pmG)
+  PASS  ledger row is delivered  (delivered)
+  tx 9XYDVT6kNpHaDY3aC3rQhmGrKQJhZMEFbBA4s79M7pmG  https://explorer.testnet.near.org/transactions/9XYDVT6kNpHaDY3aC3rQhmGrKQJhZMEFbBA4s79M7pmG
+
+S4  gateway alive, the node answers TIMEOUT_ERROR but the transaction landed
+  FAIL  same signed payment, presented again: HTTP 200 with data  (status 402 invalid_exact_near_payload_delegate_action_timeout_window_exceeds_max_timeout)
+  FAIL  total effect on the chain: charged 0
+  PASS  ledger row is delivered  (delivered)
+  FAIL  broadcast was sent exactly once (no resend needed)
+
+S5  gateway alive, the node answers TIMEOUT_ERROR and the transaction never reached the chain: stored bytes sent again
+  PASS  same signed payment, presented again: HTTP 200 with data  (status 200)
+  PASS  total effect on the chain: charged once
+  PASS  ledger row is delivered  (delivered)
+  tx CuLfTSa8gNk3fYumYL6yvJXf5iAev3rdhd3zXHdwprfc  https://explorer.testnet.near.org/transactions/CuLfTSa8gNk3fYumYL6yvJXf5iAev3rdhd3zXHdwprfc
+  PASS  broadcast attempts: timeout_before then pass (first timed out without reaching the chain, second is the stored bytes)
+  PASS  served transaction equals the stored hash
+
+S6  the last delivered payment is presented once more
+  PASS  second presentation refused: 402 payment_replayed
+  PASS  chain: one charge in total, none for the replay
+
+# 29 of 32 checks passed; FAILED: S4 same signed payment, presented again: HTTP 200 with data | S4 total effect on the chain: charged 0 | S4 broadcast was sent exactly once (no resend needed)

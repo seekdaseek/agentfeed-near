@@ -56,6 +56,19 @@ describe('a valid payment', () => {
     assert.equal(u.searchParams.has('evil'), false);
   });
 
+  test('a window a few blocks longer than advertised (the gateway RPC lags the client RPC) is still accepted; the advertised window is unchanged', async () => {
+    const { res, ch } = await payOnce(ctx, buyer, 'sol-price', { maxBlockHeight: ctx.world.height + 65n });
+    assert.equal(res.status, 200);
+    assert.equal(ch.accept.maxTimeoutSeconds, 60);
+  });
+
+  test('a window longer than advertised plus the slack is refused (slack is 20 blocks)', async () => {
+    const { res } = await payOnce(ctx, buyer, 'sol-price', { maxBlockHeight: ctx.world.height + 85n });
+    assert.equal(res.status, 402);
+    assert.equal((await json(res)).error, 'invalid_exact_near_payload_delegate_action_timeout_window_exceeds_max_timeout');
+    assert.equal(ctx.relayer.submits, 0);
+  });
+
   test('the same signed payment cannot be used twice (replay)', async () => {
     const first = await payOnce(ctx, buyer);
     assert.equal(first.res.status, 200);
