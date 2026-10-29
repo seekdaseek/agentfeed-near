@@ -61,7 +61,7 @@ Discovery, free and without an account: listed in the **Ultravioleta Bazaar** (8
 
 ## 6. Format
 
-README with the headline line first (DONE), LICENSE MIT (DONE), idea text 1,541 characters (DONE, `docs/SUBMISSION.md`, length pinned by `test/submission.test.js`), shot list `docs/VIDEO.md` (DONE; the video itself is PLANNED for the owner to record and post), payload validator `scripts/check-submission.mjs` (DONE; it never sends), `consent: true` and the OWNER fields (OWNER, Nov 13). The live contract was re-read on 2026-10-29: it also needs `demoUrl` (the public X post) and `tracks` (an array): decided 2026-10-29, `["agents", "realworld"]` (realworld hints STABLECOINS and META TRANSACTIONS, both used).
+README with the headline line first (DONE), LICENSE MIT (DONE), idea text 1,656 characters (DONE, `docs/SUBMISSION.md`, length pinned by `test/submission.test.js`), video DONE as two rendered cuts (3:40 and 1:14, `video/`, described in `docs/VIDEO.md`, verified; NOT uploaded or posted: the owner does that), payload validator `scripts/check-submission.mjs` (DONE; it never sends), `consent: true` and the OWNER fields (OWNER, Nov 13). The live contract was re-read on 2026-10-29: it also needs `demoUrl` (the public X post) and `tracks` (an array): decided 2026-10-29, `["agents", "realworld"]` (realworld hints STABLECOINS and META TRANSACTIONS, both used).
 
 ## 7. Liveness
 
@@ -93,8 +93,8 @@ None paid. Testnet USDC: the principal account holds 20 USDC less what the batch
 | drill: kill the gateway between data fetch and settlement, agent charged once or not at all | DONE live, three runs: Mac Node 24 32/32; the box under Node 22.23.1 29/32 (S4 refused: window skew, fixed with WINDOW_SLACK_BLOCKS) then 32/32; transcripts `evidence/drill-20261029-*.txt` (S1 to S6 in the README) |
 | `docs/FEEDBACK.md` on NEAR x402 tooling | DONE as a living file: 12 findings |
 | `docs/SUBMISSION.md` evidence map | DONE (evidence map, rules checklist, owner-only steps, idea, X draft) |
-| `docs/VIDEO.md` shot list | DONE (8 shots, commands, expected output, recording rules); the video itself is the owner's |
+| `docs/VIDEO.md` and the video | DONE: rendered 3:40 long cut and 1:14 X cut with `.srt` sidecars, narration verified against the script; not uploaded or posted |
 
 ## What is NOT done at the end of this phase
 
-The video (the owner records and posts it), the OWNER fields of the payload, the public flip, the X post and the submission itself (all Nov 13, all his). The first scheduled 08:12 UTC cron run (2026-10-30) has not happened yet; `scripts/batch-status.sh` reads it. Fresh-clone run done against the private repository with my credentials; it must be repeated unauthenticated after the public flip. Listings that need the owner's account (section 3 of `docs/DISCOVERY.md`) are drafts. Nothing here is claimed done that was not run.
+Uploading and posting the video (the owner), the OWNER fields of the payload, the public flip, the X post and the submission itself (all Nov 13, all his). The first scheduled 08:12 UTC cron run (2026-10-30) has not happened yet; `scripts/batch-status.sh` reads it. Fresh-clone run done against the private repository with my credentials; it must be repeated unauthenticated after the public flip. Listings that need the owner's account (section 3 of `docs/DISCOVERY.md`) are drafts. Nothing here is claimed done that was not run.

@@ -89,6 +89,6 @@ Built at NEAR HACKATHON: agentfeed-near. AI agents pay for market data in USDC o
 
 1. Decide tracks (section 3) and give the OWNER fields.
 2. Say yes to the public flip: `gh repo edit seekdaseek/agentfeed-near --visibility public --accept-visibility-change-consequences`. Then I re-run the fresh-clone judge run against the public repository and gitleaks on the final tree.
-3. Record the video from `docs/VIDEO.md`, post it on X, give me the link (`demoUrl`).
+3. Watch the rendered cuts (`video/`, described in `docs/VIDEO.md`), post the X cut on X, give me the link (`demoUrl`).
 4. I fill the payload outside the repository, run `check-submission.mjs --online`, print the full JSON.
 5. Say yes. The `curl` runs once.

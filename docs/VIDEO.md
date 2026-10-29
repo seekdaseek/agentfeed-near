@@ -1,43 +1,41 @@
-# Demo video: shot list
+# Demo video
 
-Length target 2:45 to 3:00. The rules need the video on the owner's public X post (screenshots are not enough when judges cannot open the demo, Q-012). Every command below was run for real while writing this file; the expected output shows its shape, not numbers to read out (numbers drift, `docs/RESULTS.md` is the source).
+Two cuts were rendered on 2026-10-29 and are **not uploaded or posted**: that is the owner's step. Landscape 1920x1080, 30 fps, H.264 + AAC, narrated by the AssemblyAI Voice Agent voice `charles`. The files are local and git-ignored (`video/`, not in this repository, because of size and because the build needs an AssemblyAI key):
 
-## Before recording
+| file | length | for |
+|---|---|---|
+| `video/agentfeed-near-demo.mp4` + `.srt` | 3:40 | the full demo (YouTube, the submission) |
+| `video/agentfeed-near-demo-x.mp4` + `.srt` | 1:14 | the X post (fits a free account's 2:20 limit) |
+| `video/verify-report.md`, `transcript*.txt`, `facts.json`, contact sheets | | how the video was checked (below) |
 
-- Use a fresh terminal, font 18 pt or larger, dark theme, window about 110 columns. Show only these commands; never `cat` an `.env`, never list `~/.near-credentials`. The payer is addressed by account id only: `export AGENT_ACCOUNT_ID=agentfeed-near-buyer.testnet`.
-- Open these tabs first: the README top, `https://near.ochinimus.app/stats`, the explorer. In the browser, a tx page loads slowly the first time; open the one you will show beforehand.
-- Run the paid shots once as a rehearsal (each paid call is 0.01 to 0.05 testnet USDC; the buyer holds a few USDC, check `node -e` balance or `/stats`).
-- **Anything that sends USDC to the treasury outside the gateway ledger must run with `--record`** (`node scripts/drill.mjs --record S3`), otherwise `verify-evidence` will report an unlisted transfer. Calls made through the gateway are in the ledger automatically. The drill writes `evidence/drill-<date>-node<major>.txt`; on the same day and Node major it would overwrite an existing transcript, so record on a different day or move the old file first.
-- Do not say a number you did not just see. Read counts off the screen.
+Rules it follows: full-frame terminal, explorer and code shots; the picture shows what the narration says at that moment (boxes highlight each thing as it is named); **no text over the picture** (the `.srt` is a sidecar: attach it on upload); one end card; no face, no slides.
 
-## Shots
+## What is on screen
 
-| # | time | on screen | do / type | say |
-|---|---|---|---|---|
-| 1 | 0:00-0:15 | README headline, then the repo name | scroll slowly | "AI agents that buy data per call and pay in USDC on NEAR, and need no NEAR. Built at NEAR HACKATHON for the agents track." |
-| 2 | 0:15-0:35 | terminal | `curl -i https://near.ochinimus.app/api/sol-price` | "A call without payment answers 402, x402 version 2, scheme exact, network near testnet, the USDC contract and the payee. That header is all an agent needs." Show `HTTP/2 402` and the `payment-required` line, then the JSON `accepts`. |
-| 3 | 0:35-1:05 | terminal, then explorer | `node src/client.js liquidations symbol=SOL limit=3 --pretty` | "The agent signs one delegate action, no gas, and retries. The data comes back with the settlement transaction." Click the `link`: point at the relayer as signer, the Delegate action, the inner `ft_transfer`, the USDC event. "The agent never touched NEAR for gas: the gateway's relayer paid it." |
-| 4 | 1:05-1:30 | terminal | `node scripts/stock-client.mjs https://near.ochinimus.app/api/btc-price` then `node scripts/fastnear-client.mjs` (needs `npm install --no-save @fastnear/x402` done before) | "Two different client libraries, the x402 foundation's and FastNEAR's, pay this gateway without any change on their side." |
-| 5 | 1:30-2:00 | terminal | `node scripts/drill.mjs --record S3` (about 40 s; speed it up 2x if needed) | "Now the dangerous moment: I kill the gateway with kill minus nine after the payment landed on the chain and before the data went out. The chain shows the agent has paid. I present the same signed payment again: it gets the data, and the balance moved exactly once." Point at the lines `chain at the kill: charged once` and `total effect on the chain: charged once`. |
-| 6 | 2:00-2:20 | terminal | `node scripts/control-old-way.mjs` | "The old way: an account with USDC and almost no NEAR cannot even send the transfer, the network refuses it. The same account pays our gateway and its NEAR balance does not change. A funded account can pay the old way, so the comparison is fair." |
-| 7 | 2:20-2:45 | terminal, then `docs/RESULTS.md` | `node scripts/verify-evidence.mjs` then open `docs/RESULTS.md` headline and the latency table | "Every ledger row is re-read from the chain by a script that does not use the gateway's code: all verified, the treasury balance matches. And the honest part: the payers are all our own accounts, zero independent payers, and settlement is most of each call's time." |
-| 8 | 2:45-3:00 | README, repo URL | none | "Testnet only. AgentFeed already sells on Solana and Base; only this NEAR integration was built in the window. Code is MIT, written with Claude Code. It is one of two entries from the same builder, the other is StakeStreak on NEAR. Link below." |
+| time | beat | picture |
+|---|---|---|
+| 0:00 | A | the live gateway page https://near.ochinimus.app |
+| 0:21 | B | `curl -si` of an unpaid call (the 402 and its `PAYMENT-REQUIRED` header), then `jq .accepts` with each field boxed as it is named |
+| 0:45 | C | a real paid call (`src/client.js liquidations`), then the same transaction on NEAR Rocks (a public testnet explorer): transfer buyer to treasury, the Delegate receipt, the `ft_transfer`, the raw data with the relayer as transaction signer |
+| 1:19 | D | the stock `@x402/fetch` client and `@fastnear/x402` paying the live gateway |
+| 1:41 | E | `node scripts/drill.mjs --record S3`: `kill -9` after the payment landed on the chain, the chain shows the agent charged, the same payment presented again, charged once |
+| 2:03 | K | the code at HEAD: `paid()` order in `src/server.js` (verify, reserve, fetch, verify again, submit), the hash and signed bytes stored before the broadcast (`src/chain.js`, `src/store.js`), the resend of the stored bytes (`resolveSubmitted`), the lookup with `wait_until: NONE` |
+| 2:40 | G | `node scripts/control-old-way.mjs`: the old way refused for lack of NEAR, our way leaves the NEAR balance unchanged, the funded old way works |
+| 2:58 | H | `node scripts/verify-evidence.mjs`, then `docs/RESULTS.md`: every row verifies, 0 independent payers |
+| 3:19 | I | end card: tracks, four facts, the disclosure, near.ochinimus.app, the repository |
 
-## Expected output shapes
+The X cut is beats A (shorter), C, E and the end card.
 
-- Shot 2: `HTTP/2 402`, a base64 `payment-required: eyJ4NDAy...`, JSON with `"scheme": "exact"`, `"network": "near:testnet"`, `"amount": "10000"` (0.01 USDC), `"payTo": "agentfeed-near-treasury.testnet"`, `"maxTimeoutSeconds": 60`.
-- Shot 3: `paid  status 200  ~6 s  0.02 USDC`, then `tx <hash>` and `link https://explorer.testnet.near.org/transactions/<hash>`.
-- Shot 5: `S3  kill -9 after the broadcast landed ...`, then `PASS  chain at the kill: charged once (the agent has paid and has no data)`, `PASS  same signed payment, presented again: HTTP 200 with data`, `PASS  total effect on the chain: charged once`, and a closing `# N of N checks passed` (a single scenario is 7 checks).
-- Shot 6: `PASS  refused by the network: NotEnoughBalance: ... does not have enough balance 0.0025 for operation costing 0.03...`, `PASS  NEAR balance unchanged: 0.002500 -> 0.002500`, `PASS  succeeded, tx ...`.
-- Shot 7: `"verifiedOnChain": N` equal to `"rows": N`, `"failed": 0`, `"balanceMatches": true`.
+## How it was made, and what it is not
 
-## If something fails while recording
+- **Terminal shots are replays of real runs.** Each command was run once for real in a clone of the repository at HEAD, with the time of every output line recorded; the replay types the command and shows each line at the time it really appeared. No waits were compressed. The prompt reads `~/agentfeed-near %`, not the real machine name. Explorer and gateway pages were captured live by headless Chrome. Code shots are the files at `origin/main` HEAD of the render.
+- **Every spoken number comes from `facts.json`**, read live on render day with its time; a build check fails on any digit in a spoken line that a fact does not cover, and each fact check ran. The narration gives no number for how long an unknown transaction hash blocks a `FINAL` lookup: it measured 30 s in the morning and 10 s in the afternoon of the same day.
+- **Checked after the render:** length, 1920x1080, 30 fps, loudness -14 LUFS, true peak below -2 dBFS, the audio of the final file transcribed and matched to the script line by line, the transaction on screen equals the one the client printed and the chain reports it final with the relayer as signer, a secret scan of every shot with each rule first proven on a known positive. Details in `video/verify-report.md`.
+- The video has not been watched end to end by a person. The numbers in it are as of 2026-10-29 about 14:50 UTC; `docs/RESULTS.md` keeps counting.
+- The payments made while capturing (about 0.06 USDC of testnet USDC, all through our own accounts) are in `docs/RESULTS.md` or in `evidence/known-extra-transfers.csv`; `verify-evidence` reconciles the treasury after them.
 
-- A paid call answers 402 `payment_in_flight` or `settlement_pending`: wait 5 seconds and run it again; it was never charged twice (that is the point of shot 5).
-- The explorer is slow: show `https://near.ochinimus.app/payments.csv` rows instead, each row is a transaction.
-- The buyer is out of USDC: the owner sends USDC from the treasury (`ft_transfer` signed with the treasury key) or from `iussum-near-principal.testnet`; the treasury is the builder's own account.
-- The drill fails to start: it needs `~/.near-credentials` for the relayer and buyer on the Mac; the recorded transcripts `evidence/drill-20261029-node22.txt` and `-node24.txt` can be shown instead and described honestly as a recording of an earlier run.
+## Owner steps
 
-## After recording
-
-Post on X with the video, say it was built at NEAR HACKATHON (`docs/SUBMISSION.md` section 4 has a draft), and give the post link: it is the `demoUrl`. Keep `near.ochinimus.app` up through 2026-11-25.
+1. Watch it once. If a line is wrong, say which; a re-render needs the build folder (`/Volumes/D/agentfeed-near-video`, outside the repository) and its AssemblyAI key.
+2. Upload the long cut with the `.srt` (YouTube) and post the X cut with the video on X, saying it was built at NEAR HACKATHON (`docs/SUBMISSION.md` section 4 has a draft). The post link is the `demoUrl`.
+3. Keep `near.ochinimus.app` up through 2026-11-25.
