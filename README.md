@@ -112,7 +112,10 @@ Optional: `PORT`, `HOST`, `NEAR_RPC_URL`, `USDC_ACCOUNT_ID`, `UPSTREAM_URL`, `UP
 
 ## Known advisories
 
-`npm audit` (2026-10-29) reports `elliptic` through `secp256k1` through `@near-js/crypto` (no fix upstream; this repo only uses ed25519 keys and never calls the secp256k1 path) and a nested older `zod` inside `@x402/core`; this repo's own `zod` is 4.6.7.
+`npm audit` on 2026-10-29 reported two findings. One is fixed, one has no patched release.
+
+- **zod, GHSA-mrhx-c7xc-m3w5 (CVE-2023-54404, high), fixed.** `@x402/core` 2.28.0 pins `zod ^3.24.2` (3.25.76 installed), and the advisory affects `< 4.6.6`. `package.json` carries `"overrides": { "@x402/core": { "zod": "4.6.7" } }`, so every zod in the tree is now 4.6.7 (`npm ls zod`). All 61 tests pass on it, including the stock `@x402/fetch` / `@x402/core` client driving the gateway. This is an override of a pinned range, which the `@x402/core` maintainers have not tested; if `@x402/core` ever misbehaves on zod 4, this line is the first suspect.
+- **elliptic, GHSA-848j-6mx2-7j84 (CVE-2025-14505, low), documented only.** Vulnerable range `<= 6.6.1`; **no patched version exists** (6.6.1 is the latest release on npm, last published 2024-11-13). It enters through `@near-js/crypto` -> `secp256k1` -> `elliptic`. The flaw is in secp256k1 ECDSA signing (a truncated nonce `k`); this repo signs only with ed25519 keys and never calls a secp256k1 path. `npm audit` still lists 8 low findings, all the same chain (`@near-js/*`, `@x402/near`, `secp256k1`, `elliptic`); its suggested "fixes" downgrade `@near-js/*` to 1.x, which `@x402/near` does not accept.
 
 ## License
 
