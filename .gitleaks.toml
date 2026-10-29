@@ -1,0 +1,8 @@
+# gitleaks flags the field name `token` next to a 64-hex string. That string is the public Circle USDC contract account on NEAR testnet
+# (an on-chain identifier, listed in README.md), not a credential. Everything else is still scanned with the default rules.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "public USDC contract account id on NEAR testnet"
+regexes = ['''3e2210e1184b45b64c8a434c0a7e7b23cc04ea7eb7a6c3c32520d03d4afcb8af''']
