@@ -33,7 +33,7 @@ export function validate(p) {
 
 export const template = () => ({
   requestId: randomUUID(), projectName: '<OWNER: 2-80 characters>', leadName: '<OWNER: team lead, 2-80 characters>', email: '<OWNER: contact email>', size: '<OWNER: one of 1, 2 - 4, 4 - 6, 6 - 8, 8+>',
-  tracks: ['agents'], nearAddress: '<OWNER: mainnet payout account, lowercase>', projectUrl: 'https://github.com/seekdaseek/agentfeed-near', demoUrl: '<OWNER: link to the public X post>', idea: '<paste the idea from docs/SUBMISSION.md>', consent: false,
+  tracks: ['agents', 'realworld'], nearAddress: '<OWNER: mainnet payout account, lowercase>', projectUrl: 'https://github.com/seekdaseek/agentfeed-near', demoUrl: '<OWNER: link to the public X post>', idea: '<paste the idea from docs/SUBMISSION.md>', consent: false,
 });
 
 if (import.meta.url === `file://${process.argv[1]}`) {

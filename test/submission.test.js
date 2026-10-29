@@ -12,6 +12,7 @@ const good = () => ({
 describe('submission payload validator', () => {
   test('a complete payload passes', () => assert.deepEqual(validate(good()), []));
   test('the template is invalid on purpose (placeholders, consent false)', () => assert.ok(validate(template()).length >= 5));
+  test('the template carries the two decided tracks', () => assert.deepEqual(template().tracks, ['agents', 'realworld']));
   const bad = {
     'project name too short': { projectName: 'a' }, 'project name too long': { projectName: 'a'.repeat(81) }, 'lead name missing': { leadName: undefined },
     'bad email': { email: 'nope' }, 'email over 160': { email: `${'a'.repeat(160)}@example.com` }, 'size not in the list': { size: '2-4' },
@@ -35,7 +36,7 @@ describe('docs/SUBMISSION.md', () => {
   test('the drafted idea exists and fits 20-2000 characters', () => { assert.ok(idea, 'idea markers not found'); assert.ok(idea.length >= 20 && idea.length <= 2000, `idea is ${idea.length} characters`); });
   test('the idea starts with the headline and discloses prior work and testnet', () => {
     assert.match(idea, /^AI agents/);
-    for (const must of ['existing product', 'testnet', 'StakeStreak']) assert.ok(idea.includes(must), `idea lacks "${must}"`);
+    for (const must of ['existing product', 'testnet', 'StakeStreak', 'agents', 'realworld']) assert.ok(idea.includes(must), `idea lacks "${must}"`);
   });
   test('the X post draft fits 280 characters', () => {
     const post = md.split('<!-- post:start -->')[1]?.split('<!-- post:end -->')[0]?.trim().replace(/^```\w*\n|\n```$/g, '');

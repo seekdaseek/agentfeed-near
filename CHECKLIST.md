@@ -61,7 +61,7 @@ Discovery, free and without an account: listed in the **Ultravioleta Bazaar** (8
 
 ## 6. Format
 
-README with the headline line first (DONE), LICENSE MIT (DONE), idea text 1,541 characters (DONE, `docs/SUBMISSION.md`, length pinned by `test/submission.test.js`), shot list `docs/VIDEO.md` (DONE; the video itself is PLANNED for the owner to record and post), payload validator `scripts/check-submission.mjs` (DONE; it never sends), `consent: true` and the OWNER fields (OWNER, Nov 13). The live contract was re-read on 2026-10-29: it also needs `demoUrl` (the public X post) and `tracks` (an array; `agents`, optionally `realworld`: his call).
+README with the headline line first (DONE), LICENSE MIT (DONE), idea text 1,541 characters (DONE, `docs/SUBMISSION.md`, length pinned by `test/submission.test.js`), shot list `docs/VIDEO.md` (DONE; the video itself is PLANNED for the owner to record and post), payload validator `scripts/check-submission.mjs` (DONE; it never sends), `consent: true` and the OWNER fields (OWNER, Nov 13). The live contract was re-read on 2026-10-29: it also needs `demoUrl` (the public X post) and `tracks` (an array): decided 2026-10-29, `["agents", "realworld"]` (realworld hints STABLECOINS and META TRANSACTIONS, both used).
 
 ## 7. Liveness
 
@@ -73,7 +73,7 @@ X post with the demo video required; the owner posts it. Draft (270 characters, 
 
 ## 9. Fit
 
-Track `agents`. AgentFeed is literally what the track sentence says agents pay for: data over an API, per call, with crypto. This project's contribution is the NEAR rail: gasless for the agent, verified and settled by us.
+Tracks `agents` and `realworld`. For `agents`: AgentFeed is literally what the track sentence says agents pay for: data over an API, per call, with crypto. This project's contribution is the NEAR rail: gasless for the agent, verified and settled by us.
 
 ## 10. Control
 
