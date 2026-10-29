@@ -1,0 +1,4 @@
+# AGENT_ACCOUNT_ID=agentfeed-near-buyer.testnet node scripts/fastnear-client.mjs   (Mac, 2026-10-29, @fastnear/x402 2.5.0 from npm, which depends on @x402/near ~2.18.0; this repo uses @x402/near 2.28.0)
+status 200 in 5.9 s
+paid 0.01 USDC, tx 9VsE9Mt7TJYTS1kJeABS3cbCWsB8j7zMkLjqwfTiXzpA
+https://explorer.testnet.near.org/transactions/9VsE9Mt7TJYTS1kJeABS3cbCWsB8j7zMkLjqwfTiXzpA
