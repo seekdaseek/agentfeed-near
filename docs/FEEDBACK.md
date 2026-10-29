@@ -21,6 +21,7 @@ Notes from building a gateway on `@x402/near` and reading `fastnear/x402-facilit
 9. **`@near-js/providers` retries network-level failures 12 times with backoff using the same bytes**, but not a JSON-RPC `TIMEOUT_ERROR` answer. Sensible, and worth knowing: a dropped connection is handled for you, a node-side timeout is not and has to be resolved by looking the hash up.
 10. **Balance reads right after `FINAL` show the gas reservation, not the cost.** A transaction reserves its full prepaid gas and the unused part returns in a refund receipt a few blocks later. A test that read the signer's NEAR balance immediately saw 0.0309 NEAR gone; after the refund the cost was 0.000263 NEAR.
 11. **`near-cli-rs` needs a TTY to send NEAR to an account that does not exist yet** (it asks for confirmation), so scripted funding of a fresh implicit account has to be done with a library call.
+12. **The verifier allows zero slack on the delegate window.** It refuses `remaining blocks > maxTimeoutSeconds`, and `createClientNearSigner` sets `maxBlockHeight = its own final height + maxTimeoutSeconds`. A facilitator whose RPC is behind the client's by even one block refuses a correct payment (seen once in 6 payments on the box, run 1 of the drill; cause inferred, not proven). A tolerance of a few blocks in the verifier, or a client that signs a few blocks short, would remove the failure mode; we added slack on our side.
 
 ## Numbers
 

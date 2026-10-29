@@ -22,7 +22,7 @@ Built for NEAR HACKATHON, track `agents`. Testnet only: nothing here is on NEAR 
    ```
 2. **See real settlements, no wallet.** Open [`/stats`](https://near.ochinimus.app/stats) and [`/payments.csv`](https://near.ochinimus.app/payments.csv), then click any `tx_url`. The explorer shows a transaction signed by the relayer whose `Delegate` action moves 0.01 to 0.05 USDC from the buyer to the treasury. [`/.well-known/x402`](https://near.ochinimus.app/.well-known/x402) lists the 8 routes.
 3. **Re-check the evidence against the chain yourself, no wallet:** `npm install && node scripts/verify-evidence.mjs` reads every ledger row from NEAR testnet RPC and prints `verifiedOnChain`, the treasury balance and whether it equals the ledger. Expected: [`evidence/phase2-verify-evidence.txt`](evidence/phase2-verify-evidence.txt).
-4. **Run the tests:** `npm install && npm test` (89 tests, no network, including a stock x402 client paying the gateway, the MCP server driven by a real MCP client, and the crash cases). Run on Node 22.23.1 (Mac and the Linux box) and 24.16. `NEAR_LIVE=1 npm test` adds 3 live control tests against testnet.
+4. **Run the tests:** `npm install && npm test` (91 tests, no network, including a stock x402 client paying the gateway, the MCP server driven by a real MCP client, and the crash cases). Run on Node 22.23.1 (Mac and the Linux box) and 24.16. `NEAR_LIVE=1 npm test` adds 3 live control tests against testnet.
 5. **Pay a call yourself** (needs a testnet account holding a little Circle testnet USDC, from [faucet.circle.com](https://faucet.circle.com); NEAR is needed once, 0.00125 NEAR for the token's `storage_deposit` registration, and never to pay):
    ```sh
    git clone https://github.com/seekdaseek/agentfeed-near && cd agentfeed-near && npm install
@@ -74,7 +74,15 @@ Verified by named tests in `test/gateway.test.js` ("crash drill") and by the liv
 
 ## Crash drill, live on NEAR testnet
 
-`node scripts/drill.mjs` runs a real `node src/main.js` gateway and kills it with `kill -9` at the dangerous points of one payment, with a pass-through proxy in front of the NEAR RPC that can hold the relayer's broadcast or answer it with the node's own `TIMEOUT_ERROR`. The agent signs **one** payment per scenario and presents the same signed payment again; the USDC balances are read from the chain after each step. Transcript: [`evidence/drill-20261029-node24.txt`](evidence/drill-20261029-node24.txt), **32 of 32 checks passed**.
+`node scripts/drill.mjs` runs a real `node src/main.js` gateway and kills it with `kill -9` at the dangerous points of one payment, with a pass-through proxy in front of the NEAR RPC that can hold the relayer's broadcast or answer it with the node's own `TIMEOUT_ERROR`. The agent signs **one** payment per scenario and presents the same signed payment again; the USDC balances are read from the chain after each step. Run three times on 2026-10-29, transcripts in `evidence/`:
+
+| run | runtime | result |
+|---|---|---|
+| [`drill-20261029-node24.txt`](evidence/drill-20261029-node24.txt) | Mac, Node 24.16.0 (darwin/arm64) | 32 of 32 |
+| [`drill-20261029-node22-run1.txt`](evidence/drill-20261029-node22-run1.txt) | the VPS, **Node 22.23.1 (linux/x64), the box's runtime** | **29 of 32**: scenario S4 was refused with `invalid_exact_near_payload_delegate_action_timeout_window_exceeds_max_timeout` (no money moved) |
+| [`drill-20261029-node22.txt`](evidence/drill-20261029-node22.txt) | the VPS, Node 22.23.1, after the fix below | **32 of 32** |
+
+The failure was real and is kept as found. The `@x402/near` verifier refuses a delegate action whose remaining window is longer than `maxTimeoutSeconds` blocks, and the stock client signs exactly that long from its own view of the chain. Any time the gateway's RPC connection is even one block behind the client's, a good payment looks too long. I could not reproduce a height regression by polling the RPC afterwards (25 fresh-connection reads from the box and from the Mac, no regression), so the skew explanation is a hypothesis; the fix does not depend on it: the gateway now verifies against the advertised window plus `WINDOW_SLACK_BLOCKS` (default 20) and logs the delegate height and its own height if it ever refuses a window again. The advertised `maxTimeoutSeconds` (60) is unchanged. Two new tests pin it (a 65-block window passes, an 85-block window is refused), and setting the slack to 0 makes the first one fail.
 
 | scenario | what the chain showed at the failure | after presenting the same payment again |
 |---|---|---|
@@ -141,7 +149,7 @@ EOF2
 chmod 600 .env && npm start
 ```
 
-Optional: `PORT`, `HOST`, `NEAR_RPC_URL`, `USDC_ACCOUNT_ID`, `UPSTREAM_URL`, `UPSTREAM_PREFIX` (use `/api/sample` for the free sample data, no key), `DB_PATH`, `MAX_TIMEOUT_SECONDS`, `DAILY_UPSTREAM_CAP` (defaults in [`src/config.js`](src/config.js)).
+Optional: `PORT`, `HOST`, `NEAR_RPC_URL`, `USDC_ACCOUNT_ID`, `UPSTREAM_URL`, `UPSTREAM_PREFIX` (use `/api/sample` for the free sample data, no key), `DB_PATH`, `MAX_TIMEOUT_SECONDS`, `WINDOW_SLACK_BLOCKS`, `SETTLE_WAIT_MS`, `DAILY_UPSTREAM_CAP` (defaults in [`src/config.js`](src/config.js)).
 
 ## Honest limits
 

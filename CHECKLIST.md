@@ -91,8 +91,8 @@ None paid. Testnet USDC: the principal account holds 20 USDC less what the batch
 | one-command demo with expected output | DONE: `node src/client.js <route> --pretty`, `scripts/stock-client.mjs`, `scripts/prove-settle.mjs`; output in the README |
 | `docs/RESULTS.md` written by a script | DONE: `node scripts/results.mjs` (re-reads every row from NEAR RPC while writing) |
 | one number that makes us look bad, with diagnosis | DONE in `docs/RESULTS.md`: settlement is about 86% of the gateway's own time on a call (5.0 s median gateway-only, 4.3 s of it broadcast-to-FINAL), against Mezo's transfer scheme at 0.6 s where the agent had already paid; versus Mezo's gasless permit path (6.2 s median, 14.3 s p90, 58 calls) NEAR is not slower. Also stated: independent payers = 0. |
-| drill: kill the gateway between data fetch and settlement, agent charged once or not at all | DONE live: `node scripts/drill.mjs`, 32 of 32 checks, `evidence/drill-20261029-node24.txt` (S1 to S6 in the README) |
-| `docs/FEEDBACK.md` on NEAR x402 tooling | DONE as a living file: 11 findings |
+| drill: kill the gateway between data fetch and settlement, agent charged once or not at all | DONE live, three runs: Mac Node 24 32/32; the box under Node 22.23.1 29/32 (S4 refused: window skew, fixed with WINDOW_SLACK_BLOCKS) then 32/32; transcripts `evidence/drill-20261029-*.txt` (S1 to S6 in the README) |
+| `docs/FEEDBACK.md` on NEAR x402 tooling | DONE as a living file: 12 findings |
 | `docs/SUBMISSION.md` evidence map | PLANNED Phase 4 |
 | `docs/VIDEO.md` shot list | PLANNED Phase 4 |
 
