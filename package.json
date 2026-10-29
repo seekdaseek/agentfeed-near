@@ -1,0 +1,36 @@
+{
+  "name": "agentfeed-near",
+  "version": "0.1.0",
+  "description": "Pay-per-call AgentFeed market data for AI agents, paid in USDC on NEAR (x402 exact, NEP-366 delegate actions)",
+  "type": "module",
+  "license": "MIT",
+  "private": false,
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node --env-file=.env src/main.js",
+    "test": "node --test --test-reporter=spec \"test/*.test.js\"",
+    "agent": "node --env-file=.env.agent src/client.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/seekdaseek/agentfeed-near.git"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "@near-js/crypto": "2.5.1",
+    "@near-js/providers": "2.5.1",
+    "@near-js/signers": "2.5.1",
+    "@near-js/transactions": "2.5.1",
+    "@near-js/utils": "2.5.1",
+    "@x402/near": "2.28.0",
+    "better-sqlite3": "^12.0.0",
+    "borsh": "1.0.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@x402/core": "2.28.0",
+    "@x402/fetch": "2.28.0"
+  }
+}

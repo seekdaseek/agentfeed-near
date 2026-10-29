@@ -1,0 +1,11 @@
+# node scripts/prove-settle.mjs   (Mac, 2026-10-29, local gateway on an ephemeral port, live NEAR testnet, AgentFeed free /api/sample upstream)
+buyer iussum-near-principal.testnet  USDC 20.000000   treasury agentfeed-near-treasury.testnet  USDC 0.000000
+unpaid GET /api/sol-price -> 402, payment-required header present
+paid call -> status 200 in 5.80 s
+tx CnkcxKjhLZaXWx7vCae52mJSssPVykEKUpNbdJuBhr4N
+https://explorer.testnet.near.org/transactions/CnkcxKjhLZaXWx7vCae52mJSssPVykEKUpNbdJuBhr4N
+buyer_usdc_delta -0.010000, treasury_usdc_delta 0.010000, buyer_near_unchanged true
+relayer_near_spent_yocto 332240148651100000001  (about 0.00033 NEAR)
+tx_signer agentfeed-near-relayer.testnet, tx_receiver iussum-near-principal.testnet, final_status FINAL
+ledger: state delivered, route sol-price, amount 10000, settle_ms 4341
+token receipt log: EVENT_JSON {"standard":"nep141","version":"1.0.0","event":"ft_transfer","data":[{"old_owner_id":"iussum-near-principal.testnet","new_owner_id":"agentfeed-near-treasury.testnet","amount":"10000"}]}
