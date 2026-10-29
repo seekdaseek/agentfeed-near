@@ -93,7 +93,7 @@ The failure was real and is kept as found. The `@x402/near` verifier refuses a d
 | S5 node answers `TIMEOUT_ERROR`, tx never reached the chain (gateway alive) | n/a | stored bytes sent again, served in the same request, charged once |
 | S6 the delivered payment presented again | n/a | `402 payment_replayed`, balances unchanged |
 
-Writing the drill found a real bug in the first design, which only a live node could show: `wait_until: FINAL` on an unknown transaction hash blocks for 30 s and ends in `TIMEOUT_ERROR`, so "the chain never saw it" looked like "still pending" and the resend could never trigger. Lookups now use `wait_until: NONE`, which answers `UNKNOWN_TRANSACTION` in about 0.2 s. The gateway also stores the exact signed relayer transaction with its hash, so a restart can send identical bytes (same hash: the chain can execute them at most once).
+Writing the drill found a real bug in the first design, which only a live node could show: `wait_until: FINAL` on an unknown transaction hash blocks until the node gives up (30 s when first measured, 10 s a few hours later on the same endpoint) and ends in `TIMEOUT_ERROR`, so "the chain never saw it" looked like "still pending" and the resend could never trigger. Lookups now use `wait_until: NONE`, which answers `UNKNOWN_TRANSACTION` in about 0.2 s. The gateway also stores the exact signed relayer transaction with its hash, so a restart can send identical bytes (same hash: the chain can execute them at most once).
 
 ## Control: the same purchase the old way
 

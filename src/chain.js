@@ -106,7 +106,7 @@ export function makeLiveChain(cfg) {
   async function lookup(txHash, token) {
     try {
       // wait_until NONE answers at once: UNKNOWN_TRANSACTION for a hash the node has never seen, the current status otherwise.
-      // With FINAL an unknown hash blocks for 30 s and ends in TIMEOUT_ERROR (measured on testnet), which would make "never seen" look like "still pending".
+      // With FINAL an unknown hash blocks until the node gives up (measured on testnet: 30 s at 12:2xZ, 10 s at 14:4xZ on 2026-10-29) and ends in TIMEOUT_ERROR, which would make "never seen" look like "still pending".
       const outcome = await provider.viewTransactionStatus(txHash, relayerId, 'NONE');
       if (outcome.final_execution_status !== 'FINAL') return { kind: 'pending' };
       return { ...interpretOutcome(outcome, token), tx: txHash };
