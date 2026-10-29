@@ -20,6 +20,19 @@ export async function nearBalance(p, accountId) {
   return { total, locked, spendable: total > locked ? total - locked : 0n };
 }
 
+// The balance once it stops moving: a transaction first reserves gas for its full 30 Tgas and the unused part comes back in a refund
+// receipt a few blocks later, so a read taken right after FINAL shows the reservation, not the cost.
+export async function settledNearBalance(p, accountId, { tries = 12, gapMs = 1500 } = {}) {
+  let last = await nearBalance(p, accountId);
+  for (let i = 0; i < tries; i++) {
+    await new Promise((r) => setTimeout(r, gapMs));
+    const now = await nearBalance(p, accountId);
+    if (now.total === last.total) return now;
+    last = now;
+  }
+  return last;
+}
+
 // A plain transaction signed by `accountId` itself: ft_transfer with 1 yocto and 30 Tgas, sent to the token contract.
 // Returns { ok:true, tx, finalStatus } or { ok:false, type, message } when the network refuses it.
 export async function oldWayTransfer({ p, accountId, secretKey, to, amount, asset = USDC.asset, gas = 30_000_000_000_000n }) {

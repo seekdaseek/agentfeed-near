@@ -5,7 +5,7 @@
 import { test, describe, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { createAgent, loadSecretKey } from '../src/client.js';
-import { provider, usdcBalance, nearBalance, oldWayTransfer } from '../src/control.js';
+import { provider, usdcBalance, nearBalance, settledNearBalance, oldWayTransfer } from '../src/control.js';
 
 const live = process.env.NEAR_LIVE === '1' ? false : 'set NEAR_LIVE=1 to run against NEAR testnet and the deployed gateway';
 const POOR = process.env.CONTROL_ACCOUNT || '94ef19a8accede5cef0983c5cd0eeeda22aa43cb34210567e6d4eacfde8668b4';
@@ -38,10 +38,10 @@ describe('control: the old way against our way', { skip: live }, () => {
   });
 
   test('control: a funded account can pay the old way', async () => {
-    const b0 = await nearBalance(p, BUYER);
+    const b0 = await settledNearBalance(p, BUYER);
     const r = await oldWayTransfer({ p, accountId: BUYER, secretKey: loadSecretKey(BUYER), to: POOR, amount: PRICE });
     assert.equal(r.ok, true, JSON.stringify(r));
-    const b1 = await nearBalance(p, BUYER);
+    const b1 = await settledNearBalance(p, BUYER);
     assert.ok(b0.total > b1.total, 'the old way costs the signer NEAR for gas');
   });
 });

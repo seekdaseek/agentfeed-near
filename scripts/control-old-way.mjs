@@ -9,7 +9,7 @@
 // 0.00068, less than the ~0.003 a 30 Tgas call needs), registered on the USDC contract by the buyer and sent 0.05 USDC by the buyer.
 import { writeFileSync } from 'node:fs';
 import { createAgent, loadSecretKey } from '../src/client.js';
-import { provider, usdcBalance, nearBalance, oldWayTransfer } from '../src/control.js';
+import { provider, usdcBalance, nearBalance, settledNearBalance, oldWayTransfer } from '../src/control.js';
 
 // the control account: an implicit NEAR account (its id is the hex of its public key; the key is in ~/.near-credentials/testnet/<id>.json)
 const POOR = process.env.CONTROL_ACCOUNT || '94ef19a8accede5cef0983c5cd0eeeda22aa43cb34210567e6d4eacfde8668b4';
@@ -42,10 +42,10 @@ check(sB.usdc === s0.usdc - PRICE, `USDC moved by exactly the price: ${usdc(s0.u
 check(sB.near.total === s0.near.total, `NEAR balance unchanged: ${near(s0.near.total)} -> ${near(sB.near.total)}`);
 
 say('\n(c) old way, funded: the buyer account (which holds NEAR) signs the same plain ft_transfer');
-const bb0 = await nearBalance(p, BUYER);
+const bb0 = await settledNearBalance(p, BUYER);
 const c = await oldWayTransfer({ p, accountId: BUYER, secretKey: loadSecretKey(BUYER), to: POOR, amount: PRICE });
 check(c.ok, c.ok ? `succeeded, tx ${c.tx}  ${'https://explorer.testnet.near.org/transactions/' + c.tx}` : `${c.type}: ${c.message}`);
-const bb1 = await nearBalance(p, BUYER);
+const bb1 = await settledNearBalance(p, BUYER); // after the refund of the unused prepaid gas
 const spent = bb0.total - bb1.total;
 check(c.ok && spent > 0n, `it cost the signer NEAR for gas: ${near(spent)} NEAR`);
 

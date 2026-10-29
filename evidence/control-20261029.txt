@@ -1,0 +1,17 @@
+# control 2026-10-29T13:33:11.699Z  account 94ef19a8ac…8668b4  USDC 0.050000  NEAR total 0.002500, locked for storage 0.001820, spendable 0.000680
+
+(a) old way, no gas: plain ft_transfer signed by the account itself
+  PASS  refused by the network: NotEnoughBalance: Sender 94ef19a8accede5cef0983c5cd0eeeda22aa43cb34210567e6d4eacfde8668b4 does not have enough balance 0.0025 for operation costing 0.030919383768607000000001
+  PASS  nothing moved: no transaction was recorded, no explorer link exists for a refusal at validation
+
+(b) our way: the same account pays the gateway with a delegate action (the relayer pays the gas)
+  PASS  gateway answered 200 in 5.8 s, tx 2dT7bhAPqS6ucPf9BCV8gujmeJ9QPypRCBp5N75vAPrZ
+  https://explorer.testnet.near.org/transactions/2dT7bhAPqS6ucPf9BCV8gujmeJ9QPypRCBp5N75vAPrZ
+  PASS  USDC moved by exactly the price: 0.050000 -> 0.040000
+  PASS  NEAR balance unchanged: 0.002500 -> 0.002500
+
+(c) old way, funded: the buyer account (which holds NEAR) signs the same plain ft_transfer
+  PASS  succeeded, tx 9rLmbp2m76VgFdWxkp1Rp8g6X9QhjtCaQZSqHU6vpBKz  https://explorer.testnet.near.org/transactions/9rLmbp2m76VgFdWxkp1Rp8g6X9QhjtCaQZSqHU6vpBKz
+  PASS  it cost the signer NEAR for gas: 0.000263 NEAR
+
+# all checks passed

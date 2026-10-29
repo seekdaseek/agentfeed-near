@@ -22,7 +22,7 @@ Built for NEAR HACKATHON, track `agents`. Testnet only: nothing here is on NEAR 
    ```
 2. **See real settlements, no wallet.** Open [`/stats`](https://near.ochinimus.app/stats) and [`/payments.csv`](https://near.ochinimus.app/payments.csv), then click any `tx_url`. The explorer shows a transaction signed by the relayer whose `Delegate` action moves 0.01 to 0.05 USDC from the buyer to the treasury. [`/.well-known/x402`](https://near.ochinimus.app/.well-known/x402) lists the 8 routes.
 3. **Re-check the evidence against the chain yourself, no wallet:** `npm install && node scripts/verify-evidence.mjs` reads every ledger row from NEAR testnet RPC and prints `verifiedOnChain`, the treasury balance and whether it equals the ledger. Expected: [`evidence/phase2-verify-evidence.txt`](evidence/phase2-verify-evidence.txt).
-4. **Run the tests:** `npm install && npm test` (84 tests, no network, including a stock x402 client paying the gateway and the MCP server driven by a real MCP client).
+4. **Run the tests:** `npm install && npm test` (89 tests, no network, including a stock x402 client paying the gateway, the MCP server driven by a real MCP client, and the crash cases). Run on Node 22.23.1 (Mac and the Linux box) and 24.16. `NEAR_LIVE=1 npm test` adds 3 live control tests against testnet.
 5. **Pay a call yourself** (needs a testnet account holding a little Circle testnet USDC, from [faucet.circle.com](https://faucet.circle.com); NEAR is needed once, 0.00125 NEAR for the token's `storage_deposit` registration, and never to pay):
    ```sh
    git clone https://github.com/seekdaseek/agentfeed-near && cd agentfeed-near && npm install
@@ -70,7 +70,38 @@ agent                     gateway (this repo)                         NEAR testn
 | the process dies after the chain settled but before the data went out | the same header collects the data (`recovered:true`), still charged once |
 | the same header again after delivery | `402 payment_replayed` |
 
-Verified by named tests in `test/gateway.test.js` ("crash drill"); the live `kill -9` drill is Phase 3.
+Verified by named tests in `test/gateway.test.js` ("crash drill") and by the live drill below.
+
+## Crash drill, live on NEAR testnet
+
+`node scripts/drill.mjs` runs a real `node src/main.js` gateway and kills it with `kill -9` at the dangerous points of one payment, with a pass-through proxy in front of the NEAR RPC that can hold the relayer's broadcast or answer it with the node's own `TIMEOUT_ERROR`. The agent signs **one** payment per scenario and presents the same signed payment again; the USDC balances are read from the chain after each step. Transcript: [`evidence/drill-20261029.txt`](evidence/drill-20261029.txt), **32 of 32 checks passed**.
+
+| scenario | what the chain showed at the failure | after presenting the same payment again |
+|---|---|---|
+| S1 `kill -9` while AgentFeed is being fetched | charged 0 | served, charged once |
+| S2 `kill -9` after the tx hash and signed bytes are stored, before the broadcast | charged 0; the stored hash is unknown to the chain (real `UNKNOWN_TRANSACTION`) | the stored bytes are sent again, same hash, served, charged once |
+| S3 `kill -9` after the broadcast landed, before the reply | charged once, no data delivered | served from the stored hash (`recovered:true`), still charged once |
+| S4 node answers `TIMEOUT_ERROR` but the tx landed (gateway alive) | n/a | found by looking the hash up, served in the same request, charged once |
+| S5 node answers `TIMEOUT_ERROR`, tx never reached the chain (gateway alive) | n/a | stored bytes sent again, served in the same request, charged once |
+| S6 the delivered payment presented again | n/a | `402 payment_replayed`, balances unchanged |
+
+Writing the drill found a real bug in the first design, which only a live node could show: `wait_until: FINAL` on an unknown transaction hash blocks for 30 s and ends in `TIMEOUT_ERROR`, so "the chain never saw it" looked like "still pending" and the resend could never trigger. Lookups now use `wait_until: NONE`, which answers `UNKNOWN_TRANSACTION` in about 0.2 s. The gateway also stores the exact signed relayer transaction with its hash, so a restart can send identical bytes (same hash: the chain can execute them at most once).
+
+## Control: the same purchase the old way
+
+`node scripts/control-old-way.mjs` (transcript [`evidence/control-20261029.txt`](evidence/control-20261029.txt); live tests `NEAR_LIVE=1 npm test`):
+
+- **(a) Old way, no gas.** A plain NEAR account that holds 0.05 USDC and 0.0025 NEAR (0.00182 of it locked for storage) signs `ft_transfer` itself. The network refuses it at validation: `NotEnoughBalance: Sender 94ef19a8…8668b4 does not have enough balance 0.0025 for operation costing 0.030919383768607000000001` (a call reserves its full 30 Tgas up front). Nothing is recorded, so a refusal has no explorer link.
+- **(b) Our way.** The same account pays this gateway with one delegate action: HTTP 200, USDC down by exactly 0.01, **NEAR balance unchanged at 0.0025**.
+- **(c) Old way, funded.** The buyer account, which holds NEAR, signs the same `ft_transfer` and it works, burning 0.000263 NEAR in gas. So the control is fair: the old way works if you hold NEAR.
+
+What the control does not cover: the old way also needs an account or key at every API; there is no equivalent to run here, so that part is argued, not measured.
+
+## Results and the daily batch
+
+[`docs/RESULTS.md`](docs/RESULTS.md) is written by `node scripts/results.mjs` from the public ledger: counts by route and day, payer accounts (and how many are independent of the builder: **0**), latency percentiles, a chain check of every row, treasury reconciliation, and the number that makes this project look bad, with the comparison against the same product on Mezo.
+
+A cron entry on the VPS buys two rounds of the 8 routes (16 calls, 0.32 USDC) every day at 08:12 UTC from the buyer account (`flock`, `timeout 900`, its own log), so the ledger keeps growing for the judging window. It was observed firing once, on a test minute (13:09Z, 16 of 16 calls ok); the 08:12 slot itself has not fired yet.
 
 ## Routes
 
@@ -114,7 +145,7 @@ Optional: `PORT`, `HOST`, `NEAR_RPC_URL`, `USDC_ACCOUNT_ID`, `UPSTREAM_URL`, `UP
 
 ## Honest limits
 
-- Testnet only. All payments in this repo's ledger come from the builder's own buyer account; there is no independent NEAR customer.
+- Testnet only. All payments in this repo's ledger come from the builder's own accounts; there is no independent NEAR customer (`docs/RESULTS.md` counts independent payers: 0).
 - Settle latency to `FINAL` is 4.1 to 4.7 s per call on testnet (8 live calls), 5.3 to 6.6 s end to end when AgentFeed answers fast; the data fetch and the settlement run one after the other by design (fetch before settle), and one relayer key means settlements are serialised. One call took 13.2 s because AgentFeed's `liq-pulse` took 8.1 s that time.
 - A function-call access key cannot pay (the verifier refuses it); the payer needs a full-access key.
 - The sample upstream (`/api/sample`) returns a stub, not live data; the deployed gateway uses a prepaid key and returns live data.

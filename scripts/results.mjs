@@ -61,7 +61,7 @@ w(`- Payments in any other state (\`/stats\` \`by_state\`): ${notDelivered.lengt
 w();
 w('| payer | calls | USDC | whose |');
 w('|---|---|---|---|');
-for (const [p, e] of payers) w(`| \`${p.length > 24 ? `${p.slice(0, 10)}…${p.slice(-6)}` : p}\` | ${e.n} | ${fmtUsdc(e.atomic)} | ${own.has(p) ? 'ours' : '**not listed as ours**'} |`);
+for (const [p, e] of payers) w(`| \`${p.length > 40 ? `${p.slice(0, 10)}…${p.slice(-6)}` : p}\` | ${e.n} | ${fmtUsdc(e.atomic)} | ${own.has(p) ? 'ours' : '**not listed as ours**'} |`);
 w();
 w('### By route');
 w();
