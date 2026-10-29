@@ -410,9 +410,20 @@ describe('crash drill: charged once or not at all', () => {
 const RELAYER_ID = 'agentfeed-near-relayer.testnet';
 
 describe('routes and surfaces', () => {
-  test('a required parameter is checked before any payment is read', async () => {
+  test('an unpaid request to a route with a required parameter still gets the 402 (price discovery)', async () => {
     const r = await fetch(`${ctx.url}/api/summarize`);
+    assert.equal(r.status, 402);
+    assert.equal((await json(r)).accepts[0].amount, '50000');
+  });
+  test('a request that carries a payment but misses the required parameter is refused with 400 before anything is verified or charged', async () => {
+    const ch = await challenge(ctx.url, 'summarize', '?url=https://example.com');
+    const payment = paymentFor(ch.accept, await signDelegate(buyer, ch.accept));
+    const r = await pay(ctx, 'summarize', payment, '');
     assert.equal(r.status, 400);
+    const b = await json(r);
+    assert.equal(b.charged, false);
+    assert.equal(ctx.relayer.submits, 0);
+    assert.equal(ctx.up.calls.length, 0);
   });
   test('unknown route is 404, other verbs are 405 (no free HEAD)', async () => {
     assert.equal((await fetch(`${ctx.url}/api/nope`)).status, 404);

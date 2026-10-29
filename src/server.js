@@ -142,10 +142,12 @@ export function createGateway({ cfg, chain, store, fetchImpl = fetch, now = () =
 
   async function paid(req, res, route, url) {
     const t0 = Date.now();
-    const cp = cleanParams(route, url.searchParams);
-    if (!cp.ok) return send(res, 400, { error: 'bad_request', message: cp.error });
     const raw = req.headers['payment-signature'] || req.headers['x-payment'];
+    // An unpaid request always gets the 402, even for a route whose required parameter is missing: price discovery (and every directory's
+    // prober) must see the challenge. A request that carries a payment is checked for parameters BEFORE anything is verified or charged.
     if (!raw) return send402(res, route);
+    const cp = cleanParams(route, url.searchParams);
+    if (!cp.ok) return send(res, 400, { error: 'bad_request', charged: false, message: cp.error });
 
     let payload;
     try { payload = fromB64(raw); } catch { return send402(res, route, 'malformed_payment', 'payment header is not base64 JSON'); }
