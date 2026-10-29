@@ -8,7 +8,7 @@ Status words below: DONE (exists and was run), PLANNED (phase named), OWNER (nee
 
 ## 1. Rubric
 
-There is no formal rubric. Event rules (nearhackathon.com/HACKATHON.md, read 2026-10-29): AI screening by Claude Code and Codex for reproducibility and feature verification, humans decide. So every claim below is tied to a command or a named test.
+There is no formal rubric. Event rules (nearhackathon.com/HACKATHON.md, read 2026-10-29): AI screening for reproducibility and feature verification, humans decide. So every claim below is tied to a command or a named test.
 
 Track sentence: "Agents that earn, spend, negotiate, hire other agents, and pay for APIs, compute, or data, using crypto directly or through NEAR Intents."
 

@@ -22,7 +22,7 @@ Rules it follows: full-frame terminal, explorer and code shots; the picture show
 | 2:03 | K | the code at HEAD: `paid()` order in `src/server.js` (verify, reserve, fetch, verify again, submit), the hash and signed bytes stored before the broadcast (`src/chain.js`, `src/store.js`), the resend of the stored bytes (`resolveSubmitted`), the lookup with `wait_until: NONE` |
 | 2:40 | G | `node scripts/control-old-way.mjs`: the old way refused for lack of NEAR, our way leaves the NEAR balance unchanged, the funded old way works |
 | 2:58 | H | `node scripts/verify-evidence.mjs`, then `docs/RESULTS.md`: every row verifies, 0 independent payers |
-| 3:19 | I | end card: tracks, four facts, the disclosure, near.ochinimus.app, the repository |
+| 3:19 | I | end card: tracks, four facts, the disclosure (AgentFeed is an existing product; only this NEAR integration was built in the window), near.ochinimus.app, the repository |
 
 The X cut is beats A (shorter), C, E and the end card.
 

@@ -78,7 +78,7 @@ Built at NEAR HACKATHON: agentfeed-near. AI agents pay for market data in USDC o
 | rule | where |
 |---|---|
 | Q-002 existing product on another chain: disclose in README | README "Prior work and what is new (disclosure)" |
-| Q-005 AI code and libraries listed in README | README "Built with" (Claude Code; `@x402/near`, `@near-js/*`, better-sqlite3, MCP SDK, zod) |
+| Q-005 AI code and libraries listed in README | README "Built with": the libraries (`@x402/near`, `@near-js/*`, better-sqlite3, MCP SDK, zod) and the line "Written with AI coding assistance, as the rules allow (Q-005)." |
 | Q-012 reproducible README, hosted demo kept up to 2026-11-18, ideally 2026-11-25 | judge path in README; PM2 `agentfeed-near` and its tunnel on the VPS, daily cron keeps traffic |
 | Q-014 license | MIT `LICENSE` |
 | Q-015 several projects: each README names the other | README names StakeStreak on NEAR (track `social`) |

@@ -139,7 +139,9 @@ Only declared query parameters are forwarded; paid routes are `GET` only (no fre
 
 ## Built with
 
-Node.js 22+ (gateway running on 22.23.1 on the VPS; the test suite has been run on 24.16 only), `@x402/near` 2.28.0, `@near-js/*` 2.5.1, better-sqlite3, `@modelcontextprotocol/sdk`, zod. **AI assistance:** this code was written with Claude Code (Anthropic) under the builder's direction; the live proof above was produced by executing the code against NEAR testnet.
+Node.js 22+ (gateway running on 22.23.1 on the VPS; the test suite has been run on 24.16 only), `@x402/near` 2.28.0, `@near-js/*` 2.5.1, better-sqlite3, `@modelcontextprotocol/sdk`, zod.
+
+Written with AI coding assistance, as the rules allow (Q-005).
 
 ## Run your own
 
