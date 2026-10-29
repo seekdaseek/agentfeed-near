@@ -4,6 +4,7 @@ import { settlementCacheKey, decodeSignedDelegateB64 } from '@x402/near';
 import { ROUTES, findRoute, priceAtomic, priceUsdc, usdcStr, cleanParams } from './routes.js';
 import { waitForOutcome } from './chain.js';
 import { landingHtml } from './landing.js';
+import { openapiDoc, llmsTxt } from './discovery.js';
 
 const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64');
 const fromB64 = (s) => JSON.parse(Buffer.from(s, 'base64').toString('utf8'));
@@ -250,6 +251,8 @@ export function createGateway({ cfg, chain, store, fetchImpl = fetch, now = () =
           recent: store.recent(10).map((x) => ({ ts: x.ts_settled || x.ts_created, route: x.route, payer: x.payer, amount_usdc: usdcStr(x.amount), tx: x.tx_hash, explorer: txUrl(x.tx_hash), settle_ms: x.settle_ms })),
         });
       }
+      if (p === '/openapi.json') return send(res, 200, openapiDoc({ cfg, routes: ROUTES, priceUsdc, priceAtomic, relayer: chain.relayerId }));
+      if (p === '/llms.txt') return send(res, 200, llmsTxt({ cfg, routes: ROUTES, priceUsdc, relayer: chain.relayerId }), { 'content-type': 'text/plain; charset=utf-8' });
       if (p === '/payments.csv') return send(res, 200, csv(), { 'content-type': 'text/csv; charset=utf-8' });
       return send(res, 404, { error: 'not_found', see: '/.well-known/x402' });
     } catch (e) {

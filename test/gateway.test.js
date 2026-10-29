@@ -440,5 +440,23 @@ describe('routes and surfaces', () => {
     assert.equal(m.relayer, RELAYER_ID);
     assert.equal(m.routes.length, 8);
   });
+  test('openapi.json documents every route with x-payment-info on near:testnet, and says testnet in the description', async () => {
+    const d = await json(await fetch(`${ctx.url}/openapi.json`));
+    assert.equal(d.openapi, '3.1.0');
+    assert.match(d.info.description, /NEAR TESTNET/);
+    assert.equal(Object.keys(d.paths).length, 8);
+    const g = d.paths['/api/liquidations'].get;
+    assert.deepEqual(g['x-payment-info'].protocols, [{ x402: {} }]);
+    assert.deepEqual(g['x-payment-info'].price, { mode: 'fixed', currency: 'USD', amount: '0.02' });
+    assert.equal(g['x-payment-info'].network, 'near:testnet');
+    assert.equal(g['x-payment-info'].payTo, TREASURY);
+    assert.equal(d.paths['/api/summarize'].get.parameters.find((x) => x.name === 'url').required, true);
+  });
+  test('llms.txt is plain text, names the network, the asset and the payee, and states there is no independent payer', async () => {
+    const r = await fetch(`${ctx.url}/llms.txt`);
+    assert.match(r.headers.get('content-type'), /text\/plain/);
+    const t = await r.text();
+    for (const must of ['near:testnet', TOKEN, TREASURY, 'PAYMENT-SIGNATURE', 'testnet', 'there was no independent payer']) assert.ok(t.includes(must), `missing ${must}`);
+  });
   test('b64 helper sanity', () => assert.equal(Buffer.from(b64({ a: 1 }), 'base64').toString(), '{"a":1}'));
 });
