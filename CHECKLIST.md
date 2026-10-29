@@ -1,4 +1,4 @@
-**Phase 2 (2026-10-29): 8 paid calls and 0.16 USDC settled on NEAR testnet through the deployed gateway at https://near.ochinimus.app, all from our own buyer account; 8 of 8 re-read from the chain by `scripts/verify-evidence.mjs`.** Counted from the gateway's own ledger, not typed in; the script-written `docs/RESULTS.md` replaces this line in Phase 3.
+**Phase 2 (2026-10-29): 10 paid calls and 0.18 USDC settled on NEAR testnet through the deployed gateway at https://near.ochinimus.app, all from our own buyer account; 10 of 10 re-read from the chain by `scripts/verify-evidence.mjs`.** Counted from the gateway's own ledger, not typed in; the script-written `docs/RESULTS.md` replaces this line in Phase 3.
 
 # NEAR HACKATHON, track `agents`: submission checklist
 
@@ -16,7 +16,7 @@ Track sentence: "Agents that earn, spend, negotiate, hire other agents, and pay 
 |---|---|---|
 | pay for data, crypto directly | an agent buys AgentFeed market data per call in USDC on NEAR | DONE: `scripts/prove-settle.mjs` (one real call, explorer link); tests "is verified, the data is fetched, the relayer settles..." and `test/interop.test.js` (a stock x402 client pays us) |
 | spend (unattended) | the agent client refuses a challenge for another network, token, scheme or a price over its cap | DONE: `test/client.test.js`. The gateway refuses 15 kinds of bad payment before touching AgentFeed or spending gas (`test/gateway.test.js`, "refusals never reach AgentFeed...") |
-| earn | the gateway earns USDC into a treasury account per call | DONE: treasury balance equals the ledger, re-read from chain by `scripts/verify-evidence.mjs` (DONE: 8 of 8 rows and the treasury balance, `evidence/phase2-verify-evidence.txt`) |
+| earn | the gateway earns USDC into a treasury account per call | DONE: treasury balance equals the ledger, re-read from chain by `scripts/verify-evidence.mjs` (DONE: 10 of 10 rows and the treasury balance, `evidence/phase2-verify-evidence.txt`) |
 | negotiate, hire other agents | not done. We do not claim these. | none |
 | NEAR Intents | OUT: Intents has no testnet and this entry is testnet only | none |
 
@@ -37,7 +37,7 @@ Track sentence: "Agents that earn, spend, negotiate, hire other agents, and pay 
 
 ## 4. Evidence
 
-Headline (one line, count and money): **settled calls and USDC on NEAR testnet, counted by `docs/RESULTS.md` from the ledger** (written by `scripts/results.mjs`, PLANNED Phase 3). Phase 2 count (deployed gateway): 8 calls, 0.16 USDC. Four earlier calls (0.05 USDC) went through the Phase 1 proof and a local rehearsal gateway; they are real and chain-verified but outside the deployed ledger, listed in `evidence/known-extra-transfers.csv` and counted separately by `verify-evidence`.
+Headline (one line, count and money): **settled calls and USDC on NEAR testnet, counted by `docs/RESULTS.md` from the ledger** (written by `scripts/results.mjs`, PLANNED Phase 3). Phase 2 count (deployed gateway): 10 calls, 0.18 USDC. Four earlier calls (0.05 USDC) went through the Phase 1 proof and a local rehearsal gateway; they are real and chain-verified but outside the deployed ledger, listed in `evidence/known-extra-transfers.csv` and counted separately by `verify-evidence`.
 
 NEAR payments in the window come from **our own buyer account** `agentfeed-near-buyer.testnet` (the Phase 1 proof call came from `iussum-near-principal.testnet`, a testnet account the owner holds from a sibling project, which also funded the buyer with 5 USDC). The README says so plainly; nothing here is an independent customer.
 

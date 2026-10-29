@@ -1,8 +1,4 @@
-# GATEWAY_URL=https://near.ochinimus.app node scripts/verify-evidence.mjs   (Mac, 2026-10-29, after 8 paid calls through the public URL)
-{ "rows": 8, "verifiedOnChain": 8, "failed": 0, "ledgerTotalUsdc": "0.160000",
-  "extraTransfersListed": 4, "extraVerified": 4, "extraTotalUsdc": "0.050000",
-  "treasuryBalanceUsdc": "0.210000", "treasuryMinusLedgerAndExtrasUsdc": "0.000000", "balanceMatches": true,
-  "treasury": "agentfeed-near-treasury.testnet", "relayer": "agentfeed-near-relayer.testnet",
-  "token": "3e2210e1184b45b64c8a434c0a7e7b23cc04ea7eb7a6c3c32520d03d4afcb8af" }
-# exit 0. Negative control (same script, local ledger with one amount changed from 0.01 to 0.02): verifiedOnChain 2, failed 1, balanceMatches false, exit 1.
+# GATEWAY_URL=https://near.ochinimus.app node scripts/verify-evidence.mjs   (Mac, 2026-10-29 ~12:45Z, after 10 paid calls through the public URL)
+{"rows": 10, "verifiedOnChain": 10, "failed": 0, "ledgerTotalUsdc": "0.180000", "extraTransfersListed": 4, "extraVerified": 4, "extraTotalUsdc": "0.050000", "treasuryBalanceUsdc": "0.230000", "treasuryMinusLedgerAndExtrasUsdc": "0.000000", "balanceMatches": true, "treasury": "agentfeed-near-treasury.testnet", "relayer": "agentfeed-near-relayer.testnet", "token": "3e2210e1184b45b64c8a434c0a7e7b23cc04ea7eb7a6c3c32520d03d4afcb8af"}
+# exit 0. Negative control (same script, local ledger with one amount changed from 0.01 to 0.02): verifiedOnChain 2 of 3, failed 1, balanceMatches false, exit 1.
 # "extra" transfers = the Phase 1 proof call and three calls through a local rehearsal gateway: real, chain-verified, paid by the same buyers, but not in the deployed gateway's ledger (evidence/known-extra-transfers.csv).
