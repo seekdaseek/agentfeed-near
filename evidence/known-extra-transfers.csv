@@ -1,0 +1,5 @@
+timestamp_utc,route,payer,amount_usdc,tx_hash,relayer,tx_url,state,settle_ms
+2026-10-29T12:14:29Z,sol-price,iussum-near-principal.testnet,0.01,CnkcxKjhLZaXWx7vCae52mJSssPVykEKUpNbdJuBhr4N,agentfeed-near-relayer.testnet,https://explorer.testnet.near.org/transactions/CnkcxKjhLZaXWx7vCae52mJSssPVykEKUpNbdJuBhr4N,delivered,4341
+2026-10-29T12:37:50.000Z,sol-price,agentfeed-near-buyer.testnet,0.01,FojDWd9d5k79Noa1CdCSuR4iRyd2XtNGr9iJ58tchM7w,agentfeed-near-relayer.testnet,https://explorer.testnet.near.org/transactions/FojDWd9d5k79Noa1CdCSuR4iRyd2XtNGr9iJ58tchM7w,delivered,4273
+2026-10-29T12:37:56.000Z,liquidations,agentfeed-near-buyer.testnet,0.02,FisHkCxUmDMccYBWURJCbpUa1WoT9h3Fvw6rSnP1G3EB,agentfeed-near-relayer.testnet,https://explorer.testnet.near.org/transactions/FisHkCxUmDMccYBWURJCbpUa1WoT9h3Fvw6rSnP1G3EB,delivered,4483
+2026-10-29T12:38:03.000Z,btc-price,agentfeed-near-buyer.testnet,0.01,713kuvbFvAB6jGo6dy1w2oVpDgNgFCvsRwuHG6wgZ9VM,agentfeed-near-relayer.testnet,https://explorer.testnet.near.org/transactions/713kuvbFvAB6jGo6dy1w2oVpDgNgFCvsRwuHG6wgZ9VM,delivered,4714
