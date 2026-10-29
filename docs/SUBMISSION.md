@@ -66,7 +66,7 @@ Built at NEAR HACKATHON: agentfeed-near. AI agents pay for market data in USDC o
 | a stock client pays us unmodified | `test/interop.test.js`; `scripts/stock-client.mjs` against the live URL | `AGENT_ACCOUNT_ID=you.testnet node scripts/stock-client.mjs` |
 | a second independent library pays us | `evidence/fastnear-client-20261029.txt`, `scripts/fastnear-client.mjs` | `npm install --no-save @fastnear/x402` then run it |
 | first real call, with balances before and after | `evidence/phase1-prove-settle.txt` | open tx `CnkcxKjhLZaXWx7vCae52mJSssPVykEKUpNbdJuBhr4N` |
-| the gateway refuses bad payments before touching AgentFeed or spending gas | 15 named refusal tests in `test/gateway.test.js` | `npm test` (120 tests, no network) |
+| the gateway refuses bad payments before touching AgentFeed or spending gas | 15 named refusal tests in `test/gateway.test.js` | `npm test` (121 tests, no network) |
 | the same product on Mezo is not faster | `docs/RESULTS.md` latency table, `evidence/mezo-latency.json` | dated measurement of the Mezo gateway's ledger, method in the JSON |
 | the daily batch keeps the count growing | crontab line on the VPS, `/opt/agentfeed-near/batch.log` | `ssh` read of the log; first scheduled run 2026-10-30 08:12Z (see the report) |
 | listed where agents discover paid APIs | `docs/DISCOVERY.md` | `curl 'https://facilitator.ultravioletadao.xyz/discovery/resources?q=near.ochinimus'` |
@@ -78,6 +78,7 @@ Built at NEAR HACKATHON: agentfeed-near. AI agents pay for market data in USDC o
 | rule | where |
 |---|---|
 | Q-002 existing product on another chain: disclose in README | README "Prior work and what is new (disclosure)" |
+| Q-003 window work separated from older work: dedicated branch, or tags `pre-hackathon` and `hackathon-submission`, plus a README section linking the diff | NOT MET YET: see `CHECKLIST.md` section 12 and step 2 of section 7 below |
 | Q-005 AI code and libraries listed in README | README "Built with": the libraries (`@x402/near`, `@near-js/*`, better-sqlite3, MCP SDK, zod) and the line "Written with AI coding assistance, as the rules allow (Q-005)." |
 | Q-012 reproducible README, hosted demo kept up to 2026-11-18, ideally 2026-11-25 | judge path in README; PM2 `agentfeed-near` and its tunnel on the VPS, daily cron keeps traffic |
 | Q-014 license | MIT `LICENSE` |
@@ -88,7 +89,8 @@ Built at NEAR HACKATHON: agentfeed-near. AI agents pay for market data in USDC o
 ## 7. Owner-only steps, in order (2026-11-13)
 
 1. Decide tracks (section 3) and give the OWNER fields.
-2. Say yes to the public flip: `gh repo edit seekdaseek/agentfeed-near --visibility public --accept-visibility-change-consequences`. Then I re-run the fresh-clone judge run against the public repository and gitleaks on the final tree.
-3. Watch the rendered cuts (`video/`, described in `docs/VIDEO.md`), post the X cut on X, give me the link (`demoUrl`).
-4. I fill the payload outside the repository, run `check-submission.mjs --online`, print the full JSON.
-5. Say yes. The `curl` runs once.
+2. Q-003, before the flip: say which form to use (`CHECKLIST.md` section 12). Tags (`hackathon-submission` on the last commit, `pre-hackathon` only if there is an honest commit to point at) and the README section linking the diff are made on the final commit, so they come last.
+3. Say yes to the public flip: `gh repo edit seekdaseek/agentfeed-near --visibility public --accept-visibility-change-consequences`. Then I re-run the fresh-clone judge run against the public repository and gitleaks on the final tree.
+4. Watch the rendered cuts (`video/`, described in `docs/VIDEO.md`), post the X cut on X, give me the link (`demoUrl`).
+5. I fill the payload outside the repository, run `check-submission.mjs --online`, print the full JSON.
+6. Say yes. The `curl` runs once.

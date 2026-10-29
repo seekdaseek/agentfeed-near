@@ -94,6 +94,7 @@ None paid. Testnet USDC: the principal account holds 20 USDC less what the batch
 | `docs/FEEDBACK.md` on NEAR x402 tooling | DONE as a living file: 12 findings |
 | `docs/SUBMISSION.md` evidence map | DONE (evidence map, rules checklist, owner-only steps, idea, X draft) |
 | `docs/VIDEO.md` and the video | DONE: rendered 3:40 long cut and 1:14 X cut with `.srt` sidecars, narration verified against the script; not uploaded or posted |
+| Q-003 (event rules, read 2026-10-29): "Dedicated branch, or tags pre-hackathon and hackathon-submission, plus a README section linking the diff" | **NOT MET YET.** What is true: this is a dedicated repository, its first commit is 2026-10-29 and nothing older is in it (AgentFeed and `agentfeed-mezo` are separate repositories, unchanged). What is missing: no tag exists (checked 2026-10-29, local and `origin`) and the README has no section linking the diff. PLANNED for 2026-11-13, last, on the final commit: tag `hackathon-submission` on the submitted commit and add the README section. `pre-hackathon` has no commit in this repository to point at, so its form is OWNER's call (`docs/SUBMISSION.md` section 7, step 2). Not tagged earlier because a tag moved later is worse than no tag. |
 
 ## What is NOT done at the end of this phase
 
