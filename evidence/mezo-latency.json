@@ -1,0 +1,6 @@
+{
+  "measured": "2026-10-29",
+  "what": "Server-side timings of the agentfeed-mezo gateway (the same product on Mezo testnet), read from a read-only copy of its sqlite ledger on the VPS (payments.total_ms and payments.upstream_ms); the copy was deleted afterwards. 67 settled calls, 2026-10-25T15:32:45Z to 15:56:00Z. 'own' = total_ms minus upstream_ms, i.e. everything except the AgentFeed fetch (verification, permit and transferFrom, response).",
+  "permit": { "n": 58, "total_ms": { "p50": 7192, "p90": 14633, "max": 32095 }, "own_ms": { "p50": 6211, "p90": 14301, "max": 26947 }, "note": "gasless for the agent, like agentfeed-near: the gateway settles and pays gas" },
+  "transfer": { "n": 9, "total_ms": { "p50": 961, "p90": 9148, "max": 9148 }, "own_ms": { "p50": 590, "p90": 3750, "max": 3750 }, "note": "the agent had already sent the transfer and paid its own gas before the request; the gateway only verified it" }
+}

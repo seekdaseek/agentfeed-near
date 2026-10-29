@@ -49,6 +49,6 @@ export function loadConfig(env = process.env) {
     upstreamTimeoutMs: Number(env.UPSTREAM_TIMEOUT_MS || 15000),
     dbPath: env.DB_PATH || './agentfeed-near.db',
     dailyUpstreamCap: Number(env.DAILY_UPSTREAM_CAP || 5000),
-    settleWaitMs: Number(env.SETTLE_WAIT_MS || 45000),
+    settleWaitMs: Number(env.SETTLE_WAIT_MS || 30000), // keep below maxTimeoutSeconds: a delegate action expires after that many blocks
   };
 }

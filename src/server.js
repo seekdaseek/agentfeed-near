@@ -62,8 +62,8 @@ export function createGateway({ cfg, chain, store, fetchImpl = fetch, now = () =
   });
 
   const csv = () => {
-    const head = 'timestamp_utc,route,payer,amount_usdc,tx_hash,relayer,tx_url,state,settle_ms';
-    const rows = store.all().map((p) => [new Date((p.ts_settled || p.ts_created) * 1000).toISOString(), p.route, p.payer, usdcStr(p.amount), p.tx_hash, p.relayer, txUrl(p.tx_hash), p.state, p.settle_ms ?? ''].join(','));
+    const head = 'timestamp_utc,route,payer,amount_usdc,tx_hash,relayer,tx_url,state,settle_ms,upstream_ms,total_ms';
+    const rows = store.all().map((p) => [new Date((p.ts_settled || p.ts_created) * 1000).toISOString(), p.route, p.payer, usdcStr(p.amount), p.tx_hash, p.relayer, txUrl(p.tx_hash), p.state, p.settle_ms ?? '', p.upstream_ms ?? '', p.total_ms ?? ''].join(','));
     return [head, ...rows].join('\n') + '\n';
   };
 
@@ -99,6 +99,17 @@ export function createGateway({ cfg, chain, store, fetchImpl = fetch, now = () =
     store.delivered(row.hash, { upstream_ms: up.ms, total_ms: Date.now() - t0 });
   }
 
+  // A payment left "submitted": ask the chain; if it never saw the transaction, send the stored bytes again (idempotent), then ask again.
+  async function resolveSubmitted(row, timeoutMs) {
+    const token = cfg.usdc.asset;
+    let r = await waitForOutcome(chain, row.tx_hash, { timeoutMs: Math.min(timeoutMs, 3000), intervalMs: 1000, token });
+    if (r.kind === 'unknown' && row.signed_tx) {
+      try { r = await chain.rebroadcast(row.signed_tx, token); } catch { /* the node may refuse stale bytes: the chain lookup below decides */ }
+      if (r.kind !== 'success' && r.kind !== 'failure') r = await waitForOutcome(chain, row.tx_hash, { timeoutMs, token });
+    } else if (r.kind !== 'success' && r.kind !== 'failure') r = await waitForOutcome(chain, row.tx_hash, { timeoutMs, token });
+    return r;
+  }
+
   // A payment header we have already seen. This is where "charged at most once, and if charged then the data is collectable" lives.
   async function prior(res, route, cp, row, t0) {
     if (row.route !== route.id) return send402(res, route, 'payment_replayed', 'this payment was made for another route', { charged: false });
@@ -109,7 +120,7 @@ export function createGateway({ cfg, chain, store, fetchImpl = fetch, now = () =
     try {
       let current = row;
       if (current.state === 'submitted') {
-        const r = await waitForOutcome(chain, current.tx_hash, { timeoutMs: Math.min(cfg.settleWaitMs, 20000), token: cfg.usdc.asset });
+        const r = await resolveSubmitted(current, Math.min(cfg.settleWaitMs, 20000));
         if (r.kind === 'failure') { store.failed(current.hash, r.error); return send402(res, route, 'settlement_failed', 'the transfer did not happen, nothing was charged', { charged: false, tx: current.tx_hash }); }
         if (r.kind !== 'success') return send(res, 409, { error: 'settlement_pending', charged: 'unknown', tx: current.tx_hash, explorer: txUrl(current.tx_hash), message: 'the settlement transaction is not final yet; retry with the same payment' }, { 'retry-after': '5' });
         store.settled(current.hash, null);
@@ -169,11 +180,11 @@ export function createGateway({ cfg, chain, store, fetchImpl = fetch, now = () =
       const t1 = Date.now();
       let result;
       try {
-        result = await chain.submit({ signedDelegateAction: sda, onPrepared: (txHash) => store.submitted(hash, txHash, chain.relayerId) });
+        result = await chain.submit({ signedDelegateAction: sda, onPrepared: (txHash, signedTx) => store.submitted(hash, txHash, chain.relayerId, signedTx) });
       } catch (e) {
         const row = store.get(hash);
         if (row.state === 'reserved') { store.release(hash); return send402(res, route, 'settlement_failed', `settlement could not be submitted, nothing was charged: ${e.message}`, { charged: false }); }
-        result = await waitForOutcome(chain, row.tx_hash, { timeoutMs: cfg.settleWaitMs, token: cfg.usdc.asset }); // broadcast was attempted: the chain decides
+        result = await resolveSubmitted(row, cfg.settleWaitMs); // broadcast was attempted: the chain decides, after one resend of the stored bytes if it never saw them
       }
       const row = store.get(hash);
       if (result.kind === 'failure') { store.failed(hash, result.error); return send402(res, route, 'settlement_failed', 'the transfer did not happen, nothing was charged', { charged: false, tx: row.tx_hash, detail: result.error }); }

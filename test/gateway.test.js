@@ -4,6 +4,7 @@ import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { boot, newBuyer, signDelegate, paymentFor, challenge, pay, payOnce, TREASURY, TOKEN, b64 } from './helpers.js';
+import Database from 'better-sqlite3';
 import { openStore } from '../src/store.js';
 
 let ctx; let buyer;
@@ -304,6 +305,68 @@ describe('crash drill: charged once or not at all', () => {
     assert.equal(ctx.relayer.submits, 1);
   });
 
+  test('broadcast lost (the node never saw it): the stored signed bytes are sent again inside the same request, charged once', async () => {
+    ctx.relayer.mode = 'throw_lost';
+    const { res } = await payOnce(ctx, buyer);
+    assert.equal(res.status, 200);
+    const body = await json(res);
+    assert.equal(body.paid.tx, ctx.relayer.last.tx, 'same transaction hash as the one stored before the first broadcast');
+    assert.equal(ctx.relayer.submits, 1, 'one signed relayer transaction');
+    assert.equal(ctx.relayer.rebroadcasts.length, 1, 'the same bytes were sent once more');
+    assert.equal(Buffer.from(ctx.relayer.rebroadcasts[0], 'base64').toString(), `signed:${ctx.relayer.last.tx}`);
+  });
+
+  test('gateway killed after the hash was stored and before the broadcast: after the restart the same header resends the stored bytes and is served', async () => {
+    const ch = await challenge(ctx.url);
+    const payment = paymentFor(ch.accept, await signDelegate(buyer, ch.accept));
+    const hash = (await import('@x402/near')).settlementCacheKey(payment.payload.signedDelegateAction);
+    // exactly what a kill -9 leaves behind: a submitted row with a hash and bytes, and a chain that has never heard of it
+    ctx.store.reserve({ hash, route: 'sol-price', payer: buyer.name, amount: '10000', max_block_height: String(ctx.world.height + 60n) });
+    ctx.store.submitted(hash, 'KilledTx1', 'agentfeed-near-relayer.testnet', Buffer.from('signed:KilledTx1').toString('base64'));
+    const res = await pay(ctx, 'sol-price', payment);
+    assert.equal(res.status, 200);
+    assert.equal((await json(res)).paid.recovered, true);
+    assert.equal(ctx.relayer.submits, 0, 'no new relayer transaction was signed');
+    assert.equal(ctx.relayer.rebroadcasts.length, 1);
+    assert.equal(ctx.store.get(hash).state, 'delivered');
+  });
+
+  test('chain already has the transaction: it is read, never sent again', async () => {
+    ctx.relayer.mode = 'throw_unknown';
+    const first = await payOnce(ctx, buyer);
+    const { tx } = await json(first.res);
+    ctx.relayer.txs.set(tx, { kind: 'success', transfers: [], tx });
+    assert.equal((await pay(ctx, 'sol-price', first.payment)).status, 200);
+    assert.equal(ctx.relayer.rebroadcasts.length, 0);
+  });
+
+  test('the node refuses the resend and still does not know the transaction: 409 pending, then reconcile() fails it once the delegate window is closed, nothing charged', async () => {
+    ctx.relayer.rebroadcastMode = 'throw';
+    ctx.relayer.mode = 'throw_lost';
+    const first = await payOnce(ctx, buyer);
+    assert.equal(first.res.status, 504);
+    ctx.world.height += 200n; // the delegate action can no longer land
+    const row = ctx.store.pending()[0];
+    assert.deepEqual(await ctx.gw.reconcile(), { settled: 0, failed: 1, pending: 0 });
+    assert.equal(ctx.store.get(row.hash).error, 'expired_unsubmitted');
+    const again = await json(await pay(ctx, 'sol-price', first.payment));
+    assert.equal(again.error, 'payment_failed');
+    assert.equal(again.charged, false);
+  });
+
+  test('a database from before signed_tx existed is migrated in place', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'afn-mig-'));
+    const path = join(dir, 'old.db');
+    const old = new Database(path);
+    old.exec("CREATE TABLE payments (id INTEGER PRIMARY KEY AUTOINCREMENT, hash TEXT NOT NULL UNIQUE, state TEXT NOT NULL, route TEXT NOT NULL, payer TEXT NOT NULL, amount TEXT NOT NULL, max_block_height TEXT, tx_hash TEXT, relayer TEXT, ts_created INTEGER NOT NULL, ts_settled INTEGER, ts_delivered INTEGER, upstream_ms INTEGER, settle_ms INTEGER, total_ms INTEGER, error TEXT)");
+    old.prepare("INSERT INTO payments (hash,state,route,payer,amount,tx_hash,relayer,ts_created) VALUES ('h','delivered','sol-price','p','10000','T','r',1)").run();
+    old.close();
+    const s = openStore(path);
+    assert.equal(s.get('h').signed_tx, null);
+    assert.equal(s.all().length, 1);
+    s.close();
+  });
+
   test('a restart drops reservations (nothing was broadcast) and keeps submitted payments for reconciliation', () => {
     const dir = mkdtempSync(join(tmpdir(), 'afn-'));
     const path = join(dir, 'restart.db');
@@ -352,7 +415,7 @@ describe('routes and surfaces', () => {
     assert.match(stats.note, /our own buyer/);
     const csv = await (await fetch(`${ctx.url}/payments.csv`)).text();
     const lines = csv.trim().split('\n');
-    assert.equal(lines[0], 'timestamp_utc,route,payer,amount_usdc,tx_hash,relayer,tx_url,state,settle_ms');
+    assert.equal(lines[0], 'timestamp_utc,route,payer,amount_usdc,tx_hash,relayer,tx_url,state,settle_ms,upstream_ms,total_ms');
     assert.equal(lines.length, 2);
     assert.match(lines[1], /sol-price,buyer-one\.testnet,0\.01,FakeTx0001/);
   });

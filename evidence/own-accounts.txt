@@ -1,0 +1,6 @@
+# NEAR testnet accounts controlled by the builder. scripts/results.mjs counts a payer as independent only if it is NOT listed here.
+agentfeed-near-buyer.testnet
+iussum-near-principal.testnet
+94ef19a8accede5cef0983c5cd0eeeda22aa43cb34210567e6d4eacfde8668b4
+agentfeed-near-treasury.testnet
+agentfeed-near-relayer.testnet

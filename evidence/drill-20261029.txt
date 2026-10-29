@@ -1,0 +1,53 @@
+# live drill 2026-10-29T13:24:41.316Z  buyer agentfeed-near-buyer.testnet  treasury agentfeed-near-treasury.testnet  relayer agentfeed-near-relayer.testnet  price 0.010000 USDC
+# gateway: node src/main.js (pid 9530) on :55557, NEAR RPC through a local proxy, upstream = local fake
+
+S1  kill -9 while the data is being fetched
+  PASS  at the kill the gateway had verified and reserved only (state reserved, no tx hash)  ({"state":"reserved","tx_hash":null,"signed_len":null,"error":null})
+  PASS  chain at the kill: charged 0
+  PASS  same signed payment, presented again: HTTP 200 with data  (status 200)
+  PASS  total effect on the chain: charged once
+  PASS  served as a recovery of the stored payment (recovered:false)
+  PASS  ledger row is delivered  (delivered)
+  tx CpJbrmHUHm4uHRg3cgfjrkc6MAnq5rK23QC5qNovZ3we  https://explorer.testnet.near.org/transactions/CpJbrmHUHm4uHRg3cgfjrkc6MAnq5rK23QC5qNovZ3we
+
+S2  kill -9 after the relayer tx hash and bytes are stored, before the broadcast leaves the process
+  PASS  at the kill: state submitted, tx hash stored, signed bytes stored (716 chars)
+  PASS  chain at the kill: charged 0
+  PASS  the stored transaction hash is unknown to the chain (real UNKNOWN_TRANSACTION)  (false)
+  PASS  same signed payment, presented again: HTTP 200 with data  (status 200)
+  PASS  total effect on the chain: charged once
+  PASS  served as a recovery of the stored payment (recovered:true)
+  PASS  served transaction is the one stored before the kill  (8cJNqnJWrjyhq81Md7PuycpUk4k6rhu1xFK38wxW9mMv)
+  PASS  ledger row is delivered  (delivered)
+  tx 8cJNqnJWrjyhq81Md7PuycpUk4k6rhu1xFK38wxW9mMv  https://explorer.testnet.near.org/transactions/8cJNqnJWrjyhq81Md7PuycpUk4k6rhu1xFK38wxW9mMv
+
+S3  kill -9 after the broadcast landed on the chain, before the reply reached the gateway
+  PASS  at the kill: state submitted, tx hash stored
+  PASS  chain at the kill: charged once (the agent has paid and has no data)
+  PASS  same signed payment, presented again: HTTP 200 with data  (status 200)
+  PASS  total effect on the chain: charged once
+  PASS  served as a recovery of the stored payment (recovered:true)
+  PASS  served transaction is the one stored before the kill  (7t6DwGTaRRu3BfRkc6qEmZfPZ52Z6VaHjh9AqF7wokcX)
+  PASS  ledger row is delivered  (delivered)
+  tx 7t6DwGTaRRu3BfRkc6qEmZfPZ52Z6VaHjh9AqF7wokcX  https://explorer.testnet.near.org/transactions/7t6DwGTaRRu3BfRkc6qEmZfPZ52Z6VaHjh9AqF7wokcX
+
+S4  gateway alive, the broadcast reply is lost but the transaction lands
+  PASS  same signed payment, presented again: HTTP 200 with data  (status 200)
+  PASS  total effect on the chain: charged once
+  PASS  ledger row is delivered  (delivered)
+  tx HgNkSzTkLKYEojBbDmNmjosceoUZuTBvioLbsHUPi1oj  https://explorer.testnet.near.org/transactions/HgNkSzTkLKYEojBbDmNmjosceoUZuTBvioLbsHUPi1oj
+  PASS  broadcast was sent exactly once (no resend needed)  (timeout_after)
+
+S5  gateway alive, the node answers TIMEOUT_ERROR and the transaction never reached the chain: stored bytes sent again
+  PASS  same signed payment, presented again: HTTP 200 with data  (status 200)
+  PASS  total effect on the chain: charged once
+  PASS  ledger row is delivered  (delivered)
+  tx BwdNJDpbqN4Va8WmpAfZQah75pkWFQXMH3ns5c9g15QM  https://explorer.testnet.near.org/transactions/BwdNJDpbqN4Va8WmpAfZQah75pkWFQXMH3ns5c9g15QM
+  PASS  broadcast attempts: timeout_before then pass (first timed out without reaching the chain, second is the stored bytes)
+  PASS  served transaction equals the stored hash
+
+S6  the last delivered payment is presented once more
+  PASS  second presentation refused: 402 payment_replayed
+  PASS  chain: one charge in total, none for the replay
+
+# 32 of 32 checks passed

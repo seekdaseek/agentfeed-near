@@ -105,22 +105,32 @@ export function fakeUpstream() {
 // The relayer side: submit() records the tx hash through onPrepared BEFORE it "broadcasts", exactly like the live chain does.
 export function fakeRelayer(w) {
   const r = {
-    mode: 'ok', // ok | fail | throw_before | throw_unknown
+    mode: 'ok', // ok | fail | throw_before | throw_unknown | throw_lost
     submits: 0, txs: new Map(), // txHash -> outcome the "chain" would report
-    lookups: [],
+    lookups: [], rebroadcasts: [], rebroadcastMode: 'chain', // chain: the resend lands | throw: the node refuses it | none: unknown still
     async submit({ signedDelegateAction, onPrepared }) {
       r.submits++;
       if (r.mode === 'throw_before') throw new Error('rpc refused the broadcast');
       const tx = `FakeTx${String(r.submits).padStart(4, '0')}${'x'.repeat(32)}`;
-      onPrepared(tx);
+      onPrepared(tx, Buffer.from(`signed:${tx}`).toString('base64'));
       r.last = { tx, signedDelegateAction };
-      if (r.mode === 'throw_unknown') { r.txs.set(tx, { kind: 'pending' }); const e = new Error('broadcast outcome unknown: timeout'); e.unknown = true; e.txHash = tx; throw e; }
+      if (r.mode === 'throw_unknown' || r.mode === 'throw_lost') { // lost: the node never saw it; unknown: it saw it and is still working
+        if (r.mode === 'throw_unknown') r.txs.set(tx, { kind: 'pending' });
+        const e = new Error('broadcast outcome unknown: timeout'); e.unknown = true; e.txHash = tx; throw e;
+      }
       if (r.mode === 'fail') { r.txs.set(tx, { kind: 'failure', error: 'ft_transfer panicked' }); return { kind: 'failure', error: 'ft_transfer panicked', tx }; }
       const out = r.transfer ? { ...r.transfer } : null;
       r.txs.set(tx, { kind: 'success', transfers: out ? [out] : [], tx });
       return { kind: 'success', transfers: out ? [out] : [], tx };
     },
     async lookup(tx) { r.lookups.push(tx); return r.txs.get(tx) ?? { kind: 'unknown' }; },
+    async rebroadcast(signedB64) {
+      r.rebroadcasts.push(signedB64);
+      if (r.rebroadcastMode === 'throw') throw new Error('node refused the transaction');
+      const tx = Buffer.from(signedB64, 'base64').toString().replace(/^signed:/, '');
+      if (r.rebroadcastMode === 'chain') { const out = { kind: 'success', transfers: [], tx }; r.txs.set(tx, out); return out; }
+      return { kind: 'unknown' };
+    },
   };
   return r;
 }
@@ -129,7 +139,7 @@ export async function boot({ world = fakeWorld(), dbPath = ':memory:', overrides
   const up = await fakeUpstream();
   const cfg = loadConfig({ ...baseEnv(), UPSTREAM_URL: up.url, UPSTREAM_PREFIX: '/api', DB_PATH: dbPath, SETTLE_WAIT_MS: '300', ...overrides });
   const relayer = fakeRelayer(world);
-  const chain = makeChain({ signer: fakeSigner(world), submit: relayer.submit, lookup: relayer.lookup, token: TOKEN });
+  const chain = makeChain({ signer: fakeSigner(world), submit: relayer.submit, lookup: relayer.lookup, rebroadcast: relayer.rebroadcast, token: TOKEN });
   const store = openStore(dbPath);
   const gw = createGateway({ cfg, chain, store });
   await new Promise((r) => gw.listen(0, '127.0.0.1', r));

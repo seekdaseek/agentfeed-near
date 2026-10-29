@@ -47,28 +47,32 @@ export function createAgent({
     if (usdc > maxPriceUsdc) throw new Error(`refusing: price ${usdc} USDC is above the cap of ${maxPriceUsdc}`);
   }
 
-  async function call(route, params = {}) {
+  // Signs one payment for a route and returns it WITHOUT sending it, so the same signed payment can be presented more than once
+  // (the drill does exactly that after killing the gateway). Returns { status, body } instead when the route needs no payment.
+  async function prepare(route, params = {}) {
     const url = urlFor(route, params);
-    const t0 = Date.now();
     const first = await fetchImpl(url);
-    if (first.status !== 402) {
-      const body = await first.json().catch(() => ({}));
-      return { ok: first.ok, status: first.status, body, ms: Date.now() - t0, paid: null };
-    }
+    if (first.status !== 402) return { unpaid: { status: first.status, ok: first.ok, body: await first.json().catch(() => ({})) } };
     const challenge = await readChallenge(first);
     const accept = challenge.accepts?.find((a) => a.scheme === 'exact' && a.network === network);
     if (!accept) throw new Error(`gateway offers no exact payment on ${network}`);
     guard(accept);
     const signed = await scheme.createPaymentPayload(2, accept); // signs one NEP-366 delegate action; no gas, no broadcast
     const payment = { x402Version: 2, resource: challenge.resource, accepted: accept, payload: signed.payload };
-    const send = () => fetchImpl(url, { headers: { 'payment-signature': b64(payment) } });
-    let res = await send();
+    return { url, payment, header: b64(payment), send: () => fetchImpl(url, { headers: { 'payment-signature': b64(payment) } }) };
+  }
+
+  async function call(route, params = {}) {
+    const t0 = Date.now();
+    const p = await prepare(route, params);
+    if (p.unpaid) return { ok: p.unpaid.ok, status: p.unpaid.status, body: p.unpaid.body, ms: Date.now() - t0, paid: null };
+    let res = await p.send();
     let body = await res.json().catch(() => ({}));
     // The same signed payment can be presented again while its block window is open: it can only be charged once, and
     // "charged:false" refusals, a pending settlement and a payment still in flight all resolve by asking again.
     for (let i = 0; i < retries && !res.ok && (body.charged === false ? ['upstream_unavailable', 'chain_unavailable'].includes(body.error) : ['settlement_pending', 'settlement_unconfirmed', 'payment_in_flight'].includes(body.error)); i++) {
       await sleep(2500);
-      res = await send();
+      res = await p.send();
       body = await res.json().catch(() => ({}));
     }
     const receipt = res.headers.get('payment-response') ? unb64(res.headers.get('payment-response')) : null;
@@ -76,7 +80,7 @@ export function createAgent({
   }
 
   const balance = async () => BigInt(await provider.callFunction(asset, 'ft_balance_of', { account_id: accountId }, { finality: 'final' }));
-  return { accountId, call, urlFor, balance };
+  return { accountId, call, prepare, urlFor, balance };
 }
 
 // ---- CLI ----

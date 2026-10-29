@@ -36,3 +36,44 @@ export function checkTx(result, row, ctx) {
   if (ev.length !== 1) return fail('no single NEP-141 ft_transfer event payer -> treasury for the ledger amount');
   return { ok: true, amount: want };
 }
+
+// ---- shared by scripts/verify-evidence.mjs and scripts/results.mjs
+
+// Header-based parse, so columns added later (upstream_ms, total_ms) do not break older ledgers.
+export function parseLedger(text) {
+  const [head, ...rest] = text.trim().split('\n');
+  const cols = head.split(',');
+  return rest.filter(Boolean).map((l) => Object.fromEntries(l.split(',').map((v, i) => [cols[i], v])));
+}
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// Raw JSON-RPC, none of the gateway's code on the read path. Retries a transaction the node does not know yet; null when it never shows up.
+export async function rpc(rpcUrl, method, params) {
+  for (let i = 0; i < 6; i++) {
+    try {
+      const r = await (await fetch(rpcUrl, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }), signal: AbortSignal.timeout(20000) })).json();
+      if (r.result) return r.result;
+      if (r.error?.cause?.name === 'UNKNOWN_TRANSACTION') { await sleep(500); continue; }
+      if (i === 5) return null;
+    } catch { await sleep(500); }
+  }
+  return null;
+}
+
+export async function verifyRows(rows, ctx, rpcUrl) {
+  let ok = 0, total = 0n; const bad = [];
+  for (const row of rows) {
+    const result = await rpc(rpcUrl, 'tx', { tx_hash: row.tx_hash, sender_account_id: ctx.relayer, wait_until: 'FINAL' });
+    const c = checkTx(result, row, ctx);
+    if (c.ok) { ok++; total += c.amount; } else bad.push(`${row.tx_hash}: ${c.why}`);
+  }
+  return { ok, total, bad };
+}
+
+export async function treasuryBalance(ctx, rpcUrl) {
+  const r = await rpc(rpcUrl, 'query', { request_type: 'call_function', finality: 'final', account_id: ctx.token, method_name: 'ft_balance_of', args_base64: Buffer.from(JSON.stringify({ account_id: ctx.treasury })).toString('base64') });
+  return BigInt(r.result.map((b) => String.fromCharCode(b)).join('').replace(/"/g, ''));
+}
+
+export const fmtUsdc = (a) => `${a / 1_000_000n}.${String(a % 1_000_000n).padStart(6, '0')}`;

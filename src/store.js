@@ -3,8 +3,8 @@
 // A payment is keyed by the sha256 of its signed delegate bytes (the same key @x402/near uses for its settlement cache) and
 // moves through   reserved -> submitted -> settled -> delivered   or ends in   failed.
 //   reserved   the payment passed verification and the upstream call is in flight; nothing is on the chain yet
-//   submitted  the relayer transaction is signed and its hash is stored BEFORE it is broadcast, so a crash after this point
-//              is reconciled by looking the hash up on the chain instead of guessing
+//   submitted  the relayer transaction is signed and its hash and bytes are stored BEFORE it is broadcast, so a crash after this point
+//              is reconciled by looking the hash up on the chain and, if the chain never saw it, broadcasting the same bytes again
 //   settled    the chain confirms the inner ft_transfer receipt succeeded: the agent has been charged
 //   delivered  the data was handed to the agent. A payment can be delivered once; "settled" without "delivered" only exists
 //              after a crash, and the same payment header then collects the data without paying again
@@ -36,6 +36,8 @@ export function openStore(path) {
     );
     CREATE INDEX IF NOT EXISTS payments_state ON payments(state);
   `);
+  // Databases created before the signed transaction was stored get the column added in place.
+  if (!db.prepare('PRAGMA table_info(payments)').all().some((c) => c.name === 'signed_tx')) db.exec('ALTER TABLE payments ADD COLUMN signed_tx TEXT');
   // A crash before broadcast leaves nothing on the chain, so a stranded reservation is simply dropped.
   db.prepare("DELETE FROM payments WHERE state = 'reserved'").run();
 
@@ -54,7 +56,8 @@ export function openStore(path) {
       try { ins.run({ ...p, ts: now() }); return true; } catch (e) { if (String(e.code).startsWith('SQLITE_CONSTRAINT')) return false; throw e; }
     },
     release: (hash) => db.prepare("DELETE FROM payments WHERE hash = ? AND state = 'reserved'").run(hash),
-    submitted: (hash, txHash, relayer) => db.prepare("UPDATE payments SET state = 'submitted', tx_hash = ?, relayer = ? WHERE hash = ? AND state = 'reserved'").run(txHash, relayer, hash),
+    // the exact signed relayer transaction is stored with its hash: after a crash the same bytes can be broadcast again (same hash, so the chain executes them at most once)
+    submitted: (hash, txHash, relayer, signedTx) => db.prepare("UPDATE payments SET state = 'submitted', tx_hash = ?, relayer = ?, signed_tx = ? WHERE hash = ? AND state = 'reserved'").run(txHash, relayer, signedTx ?? null, hash),
     settled: (hash, settleMs) => db.prepare("UPDATE payments SET state = 'settled', ts_settled = ?, settle_ms = COALESCE(?, settle_ms), error = NULL WHERE hash = ? AND state IN ('submitted','settled')").run(now(), settleMs ?? null, hash),
     delivered: (hash, m) => db.prepare("UPDATE payments SET state = 'delivered', ts_delivered = ?, upstream_ms = COALESCE(?, upstream_ms), total_ms = COALESCE(?, total_ms) WHERE hash = ? AND state = 'settled'").run(now(), m?.upstream_ms ?? null, m?.total_ms ?? null, hash),
     failed: (hash, error) => db.prepare("UPDATE payments SET state = 'failed', error = ? WHERE hash = ? AND state IN ('reserved','submitted')").run(String(error).slice(0, 500), hash),
