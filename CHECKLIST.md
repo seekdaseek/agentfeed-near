@@ -1,4 +1,4 @@
-**Phase 2 (2026-10-29): 10 paid calls and 0.18 USDC settled on NEAR testnet through the deployed gateway at https://near.ochinimus.app, all from our own buyer account; 10 of 10 re-read from the chain by `scripts/verify-evidence.mjs`.** Counted from the gateway's own ledger, not typed in; the script-written `docs/RESULTS.md` replaces this line in Phase 3.
+**Phase 3 (2026-10-29): 39 paid calls and 0.71 USDC settled on NEAR testnet through the deployed gateway at https://near.ochinimus.app, all from our own accounts (0 independent payers); 39 of 39 re-read from the chain, treasury reconciles exactly (`docs/RESULTS.md`, written by `scripts/results.mjs`).** A daily batch cron keeps the count growing.
 
 # NEAR HACKATHON, track `agents`: submission checklist
 
@@ -78,7 +78,7 @@ Track `agents`. AgentFeed is literally what the track sentence says agents pay f
 
 ## 10. Control
 
-The old way, side by side: an agent that wants the same data with plain NEAR tooling needs NEAR for gas, a funded account, and an account or key at the API. Control script `scripts/control-old-way.mjs` (PLANNED Phase 3) does three things on testnet: (a) an account holding USDC but **0 NEAR** attempts a direct `ft_transfer` and is refused; (b) the same account pays through the gateway with a delegate action and succeeds; (c) a **funded** account's direct `ft_transfer` succeeds, so the control is a fair one. Named test: "control: a funded account can pay the old way" in `test/control.test.js` (live, skipped unless `NEAR_LIVE=1`).
+DONE. `scripts/control-old-way.mjs` (transcript `evidence/control-20261029.txt`; the three named live tests are in `test/control.test.js`, run with `NEAR_LIVE=1 npm test`, 3 of 3 pass): (a) an implicit account holding 0.05 USDC and 0.0025 NEAR (0.00182 locked for storage) signs a plain `ft_transfer` and the network refuses it (`NotEnoughBalance ... operation costing 0.0309 NEAR`, a call reserves its full 30 Tgas), test "control: an account holding USDC and almost no NEAR cannot pay the old way"; (b) the same account pays the gateway with a delegate action, HTTP 200, USDC down by exactly the price, NEAR balance unchanged at 0.0025, test "control: the same account pays through the gateway and its NEAR balance does not change"; (c) a funded account's direct `ft_transfer` works and burns 0.000263 NEAR, test **"control: a funded account can pay the old way"**. Not covered: the per-API account or key the old way also needs; that part is argued, not measured.
 
 ## 11. Gates
 
@@ -88,14 +88,14 @@ None paid. Testnet USDC: the principal account holds 20 USDC less what the batch
 
 | artifact | state |
 |---|---|
-| one-command demo with expected output | DONE as `node src/client.js <route> --pretty` and `scripts/prove-settle.mjs`; output pasted in the README |
-| `docs/RESULTS.md` written by a script | PLANNED Phase 3 (`scripts/results.mjs`) |
-| one number that makes us look bad, with diagnosis | Phase 1 candidate: settle latency to FINAL 4.3 s on the first call (5.8 s end to end), against Mezo testnet's figure, to be measured over the batch and compared in `docs/RESULTS.md`. Diagnosis so far: relayer waits for `FINAL`, which is about 2 to 3 blocks beyond inclusion, and one relayer key serialises settles. |
-| drill: kill the gateway between data fetch and settlement, agent charged once or not at all | logic and tests DONE (`test/gateway.test.js`, "crash drill"); the live `kill -9` drill with chain balances before and after PLANNED Phase 3 (`scripts/drill.mjs`) |
-| `docs/FEEDBACK.md` on NEAR x402 tooling | DONE as a living file; seven findings so far |
+| one-command demo with expected output | DONE: `node src/client.js <route> --pretty`, `scripts/stock-client.mjs`, `scripts/prove-settle.mjs`; output in the README |
+| `docs/RESULTS.md` written by a script | DONE: `node scripts/results.mjs` (re-reads every row from NEAR RPC while writing) |
+| one number that makes us look bad, with diagnosis | DONE in `docs/RESULTS.md`: settlement is about 86% of the gateway's own time on a call (5.0 s median gateway-only, 4.3 s of it broadcast-to-FINAL), against Mezo's transfer scheme at 0.6 s where the agent had already paid; versus Mezo's gasless permit path (6.2 s median, 14.3 s p90, 58 calls) NEAR is not slower. Also stated: independent payers = 0. |
+| drill: kill the gateway between data fetch and settlement, agent charged once or not at all | DONE live: `node scripts/drill.mjs`, 32 of 32 checks, `evidence/drill-20261029.txt` (S1 to S6 in the README) |
+| `docs/FEEDBACK.md` on NEAR x402 tooling | DONE as a living file: 11 findings |
 | `docs/SUBMISSION.md` evidence map | PLANNED Phase 4 |
 | `docs/VIDEO.md` shot list | PLANNED Phase 4 |
 
-## What is NOT done at the end of Phase 2
+## What is NOT done at the end of Phase 3
 
-The batch cron on the VPS (the count grows only when calls are made), the control script and its test, the live `kill -9` drill, `scripts/results.mjs` and `docs/RESULTS.md`, `docs/SUBMISSION.md`, `docs/VIDEO.md`, the field search for other entries, the fresh-clone judge run. None is claimed above.
+`docs/SUBMISSION.md`, `docs/VIDEO.md`, the field search for other entries, the fresh-clone judge run, gitleaks on the final tree, the idea text. The 08:12 UTC cron slot has not fired yet. Nothing here is claimed done that was not run.

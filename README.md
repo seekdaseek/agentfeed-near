@@ -1,6 +1,6 @@
 # agentfeed-near
 
-**AI agents buy [AgentFeed](https://x402.ochinimus.app) market data per call and pay in USDC on NEAR: the agent signs one NEP-366 delegate action, the gateway relays it and pays the gas, so the agent needs USDC only.** Live at https://near.ochinimus.app: **10 paid calls and 0.18 USDC settled on NEAR testnet through the deployed gateway as of 2026-10-29, every one a transaction you can open** (all from our own buyer account; counted from the gateway's ledger at [`/payments.csv`](https://near.ochinimus.app/payments.csv), re-read from the chain by `scripts/verify-evidence.mjs`: 10 of 10 verified). The live number is at [`/stats`](https://near.ochinimus.app/stats).
+**AI agents buy [AgentFeed](https://x402.ochinimus.app) market data per call and pay in USDC on NEAR: the agent signs one NEP-366 delegate action, the gateway relays it and pays the gas, so the agent needs USDC only.** Live at https://near.ochinimus.app: **39 paid calls and 0.71 USDC settled on NEAR testnet through the deployed gateway as of 2026-10-29 13:35Z, every one a transaction you can open** (all from our own accounts, 0 independent payers; counted from the gateway's ledger at [`/payments.csv`](https://near.ochinimus.app/payments.csv) by `scripts/results.mjs` into [`docs/RESULTS.md`](docs/RESULTS.md), and re-read from the chain: 39 of 39 verified). The live number is at [`/stats`](https://near.ochinimus.app/stats).
 
 Built for NEAR HACKATHON, track `agents`. Testnet only: nothing here is on NEAR mainnet and the USDC has no dollar value.
 
