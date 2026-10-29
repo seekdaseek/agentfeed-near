@@ -1,4 +1,4 @@
-**Phase 3 (2026-10-29): 39 paid calls and 0.71 USDC settled on NEAR testnet through the deployed gateway at https://near.ochinimus.app, all from our own accounts (0 independent payers); 39 of 39 re-read from the chain, treasury reconciles exactly (`docs/RESULTS.md`, written by `scripts/results.mjs`).** A daily batch cron keeps the count growing.
+**Phase 4 (2026-10-29): 43 paid calls and 0.76 USDC settled on NEAR testnet through the deployed gateway at https://near.ochinimus.app, all from our own accounts (0 independent payers); 43 of 43 re-read from the chain, treasury reconciles exactly (`docs/RESULTS.md`, written by `scripts/results.mjs`).** A daily batch cron keeps the count growing.
 
 # NEAR HACKATHON, track `agents`: submission checklist
 
@@ -51,18 +51,17 @@ AgentFeed's existing traction, quoted only after excluding our wallets. Method a
 
 Of the 232: 176 paid exactly once, 34 twice, 22 three times or more. Earlier on-chain profiling of this ledger (Oct 8) found that several of the biggest remaining wallets are **catalog sweepers** (they pay one to three calls to each of hundreds of x402 services) and one is a benchmarker; one repeat buyer is real. So the README may say "232 wallets other than ours have paid AgentFeed, mostly one-off probes" and must not say "customers" or "users". Nothing about AgentFeed's mainnet traffic is a NEAR result and the README keeps the two apart.
 
-## 5. Field (searched 2026-10-29; to be repeated in Phase 4)
+## 5. Field (searched 2026-10-29, full write-up in `docs/DISCOVERY.md`)
 
-- `r-near/x402-near-demo`: testnet demo, custom scheme name, three small files, no replay ledger, no data behind it.
-- `fastnear/x402-facilitator`: production-grade Rust facilitator for NEAR and Base, Circle USDC, reference deployments gated by manual approval. A facilitator, not an API that sells anything.
-- `@x402/near` (x402 foundation): client, server and facilitator schemes; the library we build on.
-- near-pay and others: PLANNED, search in Phase 4 and list what is found, including entries we cannot beat.
+No other hackathon entry for x402 on NEAR turned up (weak evidence: general web search, submissions are not public before the window). What exists: `@x402/near` (x402 foundation, the library we build on), `fastnear/x402-facilitator` (Rust facilitator, hosted instances behind manual credentials, its merchant catalog is empty), `@fastnear/x402` 2.5.0 (adapters; **its Node payer pays our live gateway unmodified**, `evidence/fastnear-client-20261029.txt`), `r-near/x402-near-demo` (custom scheme name, no ledger), `r402-near` (Rust crate, not tested), `Kampouse/near-pay` (a payer; its x402 payments settle on Solana), the Ultravioleta facilitator (lists `near-testnet`), and one unreachable site that claims NEAR but proves payments on Solana or Base.
 
-Our angle, stated without comparison to unseen entries: a live API that already sells on Solana and Base now sells on NEAR through a separate gateway, with a ledger that survives a crash between data and settlement (charged once or not at all), a verifier that re-reads every settlement from the chain, and a stock x402 client that pays it unmodified.
+Our angle, without claims about unseen entries: a live API that already sells to strangers on Solana and Base, now sold on NEAR through a gateway that two independent client libraries pay unmodified, that is charged-once-or-not-at-all under `kill -9` (live drill, 32 of 32 on Node 22 on the box), whose ledger a script re-reads from the chain, and that says plainly all payers so far are ours.
+
+Discovery, free and without an account: listed in the **Ultravioleta Bazaar** (8 routes registered, HTTP 201, 2 exposed `alive` at the last read, the rest pending its prober); **402index rejected** the NEAR entry (`assetKnown:false`); x402scan and x402scout cannot list a NEAR network (not attempted rather than mislabelled). Everything that needs the owner's account, a form or a post is drafted in `docs/DISCOVERY.md` section 3 and not sent.
 
 ## 6. Format
 
-README with the headline line first (DONE as skeleton), LICENSE MIT (DONE), demo video per `docs/VIDEO.md` (PLANNED Phase 4), idea text 20 to 2000 characters (PLANNED Phase 4, in `docs/SUBMISSION.md`), `consent: true` and form fields (OWNER, Nov 13).
+README with the headline line first (DONE), LICENSE MIT (DONE), idea text 1,541 characters (DONE, `docs/SUBMISSION.md`, length pinned by `test/submission.test.js`), shot list `docs/VIDEO.md` (DONE; the video itself is PLANNED for the owner to record and post), payload validator `scripts/check-submission.mjs` (DONE; it never sends), `consent: true` and the OWNER fields (OWNER, Nov 13). The live contract was re-read on 2026-10-29: it also needs `demoUrl` (the public X post) and `tracks` (an array; `agents`, optionally `realworld`: his call).
 
 ## 7. Liveness
 
@@ -70,7 +69,7 @@ README with the headline line first (DONE as skeleton), LICENSE MIT (DONE), demo
 
 ## 8. Social
 
-X post with demo video required; the owner posts it. A draft goes in `docs/SUBMISSION.md` (Phase 4). OWNER.
+X post with the demo video required; the owner posts it. Draft (270 characters, length pinned by a test) in `docs/SUBMISSION.md` section 4. OWNER.
 
 ## 9. Fit
 
@@ -93,9 +92,9 @@ None paid. Testnet USDC: the principal account holds 20 USDC less what the batch
 | one number that makes us look bad, with diagnosis | DONE in `docs/RESULTS.md`: settlement is about 86% of the gateway's own time on a call (5.0 s median gateway-only, 4.3 s of it broadcast-to-FINAL), against Mezo's transfer scheme at 0.6 s where the agent had already paid; versus Mezo's gasless permit path (6.2 s median, 14.3 s p90, 58 calls) NEAR is not slower. Also stated: independent payers = 0. |
 | drill: kill the gateway between data fetch and settlement, agent charged once or not at all | DONE live, three runs: Mac Node 24 32/32; the box under Node 22.23.1 29/32 (S4 refused: window skew, fixed with WINDOW_SLACK_BLOCKS) then 32/32; transcripts `evidence/drill-20261029-*.txt` (S1 to S6 in the README) |
 | `docs/FEEDBACK.md` on NEAR x402 tooling | DONE as a living file: 12 findings |
-| `docs/SUBMISSION.md` evidence map | PLANNED Phase 4 |
-| `docs/VIDEO.md` shot list | PLANNED Phase 4 |
+| `docs/SUBMISSION.md` evidence map | DONE (evidence map, rules checklist, owner-only steps, idea, X draft) |
+| `docs/VIDEO.md` shot list | DONE (8 shots, commands, expected output, recording rules); the video itself is the owner's |
 
-## What is NOT done at the end of Phase 3
+## What is NOT done at the end of this phase
 
-`docs/SUBMISSION.md`, `docs/VIDEO.md`, the field search for other entries, the fresh-clone judge run, gitleaks on the final tree, the idea text. The 08:12 UTC cron slot has not fired yet. Nothing here is claimed done that was not run.
+The video (the owner records and posts it), the OWNER fields of the payload, the public flip, the X post and the submission itself (all Nov 13, all his). The first scheduled 08:12 UTC cron run (2026-10-30) has not happened yet; `scripts/batch-status.sh` reads it. Fresh-clone run done against the private repository with my credentials; it must be repeated unauthenticated after the public flip. Listings that need the owner's account (section 3 of `docs/DISCOVERY.md`) are drafts. Nothing here is claimed done that was not run.

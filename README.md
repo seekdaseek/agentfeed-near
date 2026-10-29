@@ -1,6 +1,6 @@
 # agentfeed-near
 
-**AI agents buy [AgentFeed](https://x402.ochinimus.app) market data per call and pay in USDC on NEAR: the agent signs one NEP-366 delegate action, the gateway relays it and pays the gas, so the agent needs USDC only.** Live at https://near.ochinimus.app: **39 paid calls and 0.71 USDC settled on NEAR testnet through the deployed gateway as of 2026-10-29 13:35Z, every one a transaction you can open** (all from our own accounts, 0 independent payers; counted from the gateway's ledger at [`/payments.csv`](https://near.ochinimus.app/payments.csv) by `scripts/results.mjs` into [`docs/RESULTS.md`](docs/RESULTS.md), and re-read from the chain: 39 of 39 verified). The live number is at [`/stats`](https://near.ochinimus.app/stats).
+**AI agents buy [AgentFeed](https://x402.ochinimus.app) market data per call and pay in USDC on NEAR: the agent signs one NEP-366 delegate action, the gateway relays it and pays the gas, so the agent needs USDC only.** Live at https://near.ochinimus.app: **43 paid calls and 0.76 USDC settled on NEAR testnet through the deployed gateway as of 2026-10-29 14:15Z, every one a transaction you can open** (all from our own accounts, 0 independent payers; counted from the gateway's ledger at [`/payments.csv`](https://near.ochinimus.app/payments.csv) by `scripts/results.mjs` into [`docs/RESULTS.md`](docs/RESULTS.md), and re-read from the chain: 43 of 43 verified). The live number is at [`/stats`](https://near.ochinimus.app/stats).
 
 Built for NEAR HACKATHON, track `agents`. Testnet only: nothing here is on NEAR mainnet and the USDC has no dollar value.
 
@@ -110,6 +110,12 @@ What the control does not cover: the old way also needs an account or key at eve
 [`docs/RESULTS.md`](docs/RESULTS.md) is written by `node scripts/results.mjs` from the public ledger: counts by route and day, payer accounts (and how many are independent of the builder: **0**), latency percentiles, a chain check of every row, treasury reconciliation, and the number that makes this project look bad, with the comparison against the same product on Mezo.
 
 A cron entry on the VPS buys two rounds of the 8 routes (16 calls, 0.32 USDC) every day at 08:12 UTC from the buyer account (`flock`, `timeout 900`, its own log), so the ledger keeps growing for the judging window. It was observed firing once, on a test minute (13:09Z, 16 of 16 calls ok); the 08:12 slot itself has not fired yet.
+
+## Discovery, second client library, submission pack
+
+- [`docs/DISCOVERY.md`](docs/DISCOVERY.md): who else does x402 on NEAR (field search), where agents discover paid APIs, what was listed (Ultravioleta Bazaar, 8 routes; 402index rejected NEAR) and what needs the owner. The gateway also serves [`/openapi.json`](https://near.ochinimus.app/openapi.json) (OpenAPI 3.1 with `x-payment-info`) and [`/llms.txt`](https://near.ochinimus.app/llms.txt).
+- A second independent client library pays the gateway unmodified: `npm install --no-save @fastnear/x402 && AGENT_ACCOUNT_ID=you.testnet node scripts/fastnear-client.mjs` ([`evidence/fastnear-client-20261029.txt`](evidence/fastnear-client-20261029.txt)).
+- [`docs/SUBMISSION.md`](docs/SUBMISSION.md) (idea text, payload rules, evidence map, owner-only steps), [`docs/VIDEO.md`](docs/VIDEO.md) (shot list), `scripts/check-submission.mjs` (validates the payload, never sends it).
 
 ## Routes
 
