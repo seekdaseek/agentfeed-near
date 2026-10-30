@@ -44,7 +44,7 @@ check(sB.near.total === s0.near.total, `NEAR balance unchanged: ${near(s0.near.t
 say('\n(c) old way, funded: the buyer account (which holds NEAR) signs the same plain ft_transfer');
 const bb0 = await settledNearBalance(p, BUYER);
 const c = await oldWayTransfer({ p, accountId: BUYER, secretKey: loadSecretKey(BUYER), to: POOR, amount: PRICE });
-check(c.ok, c.ok ? `succeeded, tx ${c.tx}  ${'https://explorer.testnet.near.org/transactions/' + c.tx}` : `${c.type}: ${c.message}`);
+check(c.ok, c.ok ? `succeeded, tx ${c.tx}  ${'https://testnet.near.rocks/tx/' + c.tx}` : `${c.type}: ${c.message}`);
 const bb1 = await settledNearBalance(p, BUYER); // after the refund of the unused prepaid gas
 const spent = bb0.total - bb1.total;
 check(c.ok && spent > 0n, `it cost the signer NEAR for gas: ${near(spent)} NEAR`);

@@ -15,6 +15,6 @@ const res = await wrapFetchWithPayment(fetch, client)(url);
 const body = await res.json();
 console.log(`status ${res.status} in ${((Date.now() - t0) / 1000).toFixed(1)} s`);
 const h = res.headers.get('payment-response');
-if (h) { const s = decodePaymentResponseHeader(h); console.log(`settlement ${s.transaction} payer ${s.payer} on ${s.network}\nhttps://explorer.testnet.near.org/transactions/${s.transaction}`); }
+if (h) { const s = decodePaymentResponseHeader(h); console.log(`settlement ${s.transaction} payer ${s.payer} on ${s.network}\nhttps://testnet.near.rocks/tx/${s.transaction}`); }
 console.log(JSON.stringify(body.data ?? body).slice(0, 200));
 process.exit(res.ok ? 0 : 1);

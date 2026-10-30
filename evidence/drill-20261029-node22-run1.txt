@@ -10,7 +10,7 @@ S1  kill -9 while the data is being fetched
   PASS  total effect on the chain: charged once
   PASS  served as a recovery of the stored payment (recovered:false)
   PASS  ledger row is delivered  (delivered)
-  tx 67mGJ3nRwBGcL3T3tUTBkzAWrxgx86pUNKiyzkkUfXDY  https://explorer.testnet.near.org/transactions/67mGJ3nRwBGcL3T3tUTBkzAWrxgx86pUNKiyzkkUfXDY
+  tx 67mGJ3nRwBGcL3T3tUTBkzAWrxgx86pUNKiyzkkUfXDY  https://testnet.near.rocks/tx/67mGJ3nRwBGcL3T3tUTBkzAWrxgx86pUNKiyzkkUfXDY
 
 S2  kill -9 after the relayer tx hash and bytes are stored, before the broadcast leaves the process
   PASS  at the kill: state submitted, tx hash stored, signed bytes stored (716 chars)
@@ -21,7 +21,7 @@ S2  kill -9 after the relayer tx hash and bytes are stored, before the broadcast
   PASS  served as a recovery of the stored payment (recovered:true)
   PASS  served transaction is the one stored before the kill  (EV3haNmDYzdpnKn1HuYkfKMNsHpkKxLt7MwpR6SLC5h4)
   PASS  ledger row is delivered  (delivered)
-  tx EV3haNmDYzdpnKn1HuYkfKMNsHpkKxLt7MwpR6SLC5h4  https://explorer.testnet.near.org/transactions/EV3haNmDYzdpnKn1HuYkfKMNsHpkKxLt7MwpR6SLC5h4
+  tx EV3haNmDYzdpnKn1HuYkfKMNsHpkKxLt7MwpR6SLC5h4  https://testnet.near.rocks/tx/EV3haNmDYzdpnKn1HuYkfKMNsHpkKxLt7MwpR6SLC5h4
 
 S3  kill -9 after the broadcast landed on the chain, before the reply reached the gateway
   PASS  at the kill: state submitted, tx hash stored
@@ -31,7 +31,7 @@ S3  kill -9 after the broadcast landed on the chain, before the reply reached th
   PASS  served as a recovery of the stored payment (recovered:true)
   PASS  served transaction is the one stored before the kill  (9XYDVT6kNpHaDY3aC3rQhmGrKQJhZMEFbBA4s79M7pmG)
   PASS  ledger row is delivered  (delivered)
-  tx 9XYDVT6kNpHaDY3aC3rQhmGrKQJhZMEFbBA4s79M7pmG  https://explorer.testnet.near.org/transactions/9XYDVT6kNpHaDY3aC3rQhmGrKQJhZMEFbBA4s79M7pmG
+  tx 9XYDVT6kNpHaDY3aC3rQhmGrKQJhZMEFbBA4s79M7pmG  https://testnet.near.rocks/tx/9XYDVT6kNpHaDY3aC3rQhmGrKQJhZMEFbBA4s79M7pmG
 
 S4  gateway alive, the node answers TIMEOUT_ERROR but the transaction landed
   FAIL  same signed payment, presented again: HTTP 200 with data  (status 402 invalid_exact_near_payload_delegate_action_timeout_window_exceeds_max_timeout)
@@ -43,7 +43,7 @@ S5  gateway alive, the node answers TIMEOUT_ERROR and the transaction never reac
   PASS  same signed payment, presented again: HTTP 200 with data  (status 200)
   PASS  total effect on the chain: charged once
   PASS  ledger row is delivered  (delivered)
-  tx CuLfTSa8gNk3fYumYL6yvJXf5iAev3rdhd3zXHdwprfc  https://explorer.testnet.near.org/transactions/CuLfTSa8gNk3fYumYL6yvJXf5iAev3rdhd3zXHdwprfc
+  tx CuLfTSa8gNk3fYumYL6yvJXf5iAev3rdhd3zXHdwprfc  https://testnet.near.rocks/tx/CuLfTSa8gNk3fYumYL6yvJXf5iAev3rdhd3zXHdwprfc
   PASS  broadcast attempts: timeout_before then pass (first timed out without reaching the chain, second is the stored bytes)
   PASS  served transaction equals the stored hash
 

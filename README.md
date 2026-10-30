@@ -33,7 +33,7 @@ Built for NEAR HACKATHON, track `agents`. Testnet only: nothing here is on NEAR 
    ```
    paid  status 200  5.9 s  0.01 USDC
    tx    FojDWd9d5k79Noa1CdCSuR4iRyd2XtNGr9iJ58tchM7w
-   link  https://explorer.testnet.near.org/transactions/FojDWd9d5k79Noa1CdCSuR4iRyd2XtNGr9iJ58tchM7w
+   link  https://testnet.near.rocks/tx/FojDWd9d5k79Noa1CdCSuR4iRyd2XtNGr9iJ58tchM7w
    data  {"route":"/api/sol-price",...}
    ```
    Phase 1 transcript with balances before and after: [`evidence/phase1-prove-settle.txt`](evidence/phase1-prove-settle.txt).

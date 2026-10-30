@@ -136,7 +136,7 @@ async function main() {
     if (extra.tx) check(sid, 'served transaction is the one stored before the kill', body.paid?.tx === extra.tx, body.paid?.tx);
     const r = row(dbPath);
     check(sid, `ledger row is delivered`, r?.state === 'delivered', r?.state);
-    if (body.paid?.tx) { delivered.push({ sid, tx: body.paid.tx, payer: BUYER }); say(`  tx ${body.paid.tx}  ${NEAR_TESTNET.explorer}/transactions/${body.paid.tx}`); }
+    if (body.paid?.tx) { delivered.push({ sid, tx: body.paid.tx, payer: BUYER }); say(`  tx ${body.paid.tx}  ${NEAR_TESTNET.explorer}/tx/${body.paid.tx}`); }
     return { res, body };
   };
 
@@ -214,7 +214,7 @@ async function main() {
   if (RECORD) {
     const csvRows = delivered.map((d) => {
       const dbr = new Database(dbPath, { readonly: true }).prepare('SELECT * FROM payments WHERE tx_hash = ?').get(d.tx);
-      return [new Date((dbr.ts_settled || dbr.ts_created) * 1000).toISOString(), dbr.route, dbr.payer, '0.01', d.tx, RELAYER, `${NEAR_TESTNET.explorer}/transactions/${d.tx}`, dbr.state, dbr.settle_ms ?? ''].join(',');
+      return [new Date((dbr.ts_settled || dbr.ts_created) * 1000).toISOString(), dbr.route, dbr.payer, '0.01', d.tx, RELAYER, `${NEAR_TESTNET.explorer}/tx/${d.tx}`, dbr.state, dbr.settle_ms ?? ''].join(',');
     });
     appendFileSync(new URL('../evidence/known-extra-transfers.csv', import.meta.url), csvRows.join('\n') + '\n');
     writeFileSync(new URL(`../evidence/drill-${stamp.slice(0, 10).replaceAll('-', '')}-node${process.versions.node.split('.')[0]}.txt`, import.meta.url), lines.join('\n') + '\n');

@@ -76,7 +76,7 @@ export function createAgent({
       body = await res.json().catch(() => ({}));
     }
     const receipt = res.headers.get('payment-response') ? unb64(res.headers.get('payment-response')) : null;
-    return { ok: res.ok, status: res.status, body, receipt, ms: Date.now() - t0, paid: res.ok ? { tx: receipt?.transaction, url: `${explorer}/transactions/${receipt?.transaction}` } : null };
+    return { ok: res.ok, status: res.status, body, receipt, ms: Date.now() - t0, paid: res.ok ? { tx: receipt?.transaction, url: `${explorer}/tx/${receipt?.transaction}` } : null };
   }
 
   const balance = async () => BigInt(await provider.callFunction(asset, 'ft_balance_of', { account_id: accountId }, { finality: 'final' }));

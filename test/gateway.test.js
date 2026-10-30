@@ -38,7 +38,7 @@ describe('a valid payment', () => {
     assert.equal(body.route, 'sol-price');
     assert.equal(body.paid.amount_usdc, '0.01');
     assert.equal(body.paid.payer, buyer.name);
-    assert.match(body.paid.explorer, /explorer\.testnet\.near\.org\/transactions\/FakeTx0001/);
+    assert.match(body.paid.explorer, /testnet\.near\.rocks\/tx\/FakeTx0001/);
     assert.deepEqual(body.data, ctx.up.payload);
     const receipt = JSON.parse(Buffer.from(res.headers.get('payment-response'), 'base64').toString());
     assert.deepEqual({ success: receipt.success, network: receipt.network, payer: receipt.payer }, { success: true, network: 'near:testnet', payer: buyer.name });

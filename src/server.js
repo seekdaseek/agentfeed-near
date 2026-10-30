@@ -17,7 +17,7 @@ export function createGateway({ cfg, chain, store, fetchImpl = fetch, now = () =
   const hits = new Map(); // ip -> [count, windowStart]
   let upstreamDay = { day: '', n: 0 };
 
-  const txUrl = (h) => `${cfg.explorer}/transactions/${h}`;
+  const txUrl = (h) => `${cfg.explorer}/tx/${h}`;
   const requirementsFor = (route) => ({
     scheme: 'exact',
     network: cfg.network,

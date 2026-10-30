@@ -3,7 +3,7 @@ export const NEAR_TESTNET = {
   network: 'near:testnet',
   networkId: 'testnet',
   rpcUrl: 'https://rpc.testnet.fastnear.com',
-  explorer: 'https://explorer.testnet.near.org',
+  explorer: 'https://testnet.near.rocks',
 };
 
 // Circle USDC on NEAR testnet, the default asset of @x402/near and of the fastnear/x402-facilitator reference deployment.

@@ -6,12 +6,12 @@
 
 (b) our way: the same account pays the gateway with a delegate action (the relayer pays the gas)
   PASS  gateway answered 200 in 5.8 s, tx 2dT7bhAPqS6ucPf9BCV8gujmeJ9QPypRCBp5N75vAPrZ
-  https://explorer.testnet.near.org/transactions/2dT7bhAPqS6ucPf9BCV8gujmeJ9QPypRCBp5N75vAPrZ
+  https://testnet.near.rocks/tx/2dT7bhAPqS6ucPf9BCV8gujmeJ9QPypRCBp5N75vAPrZ
   PASS  USDC moved by exactly the price: 0.050000 -> 0.040000
   PASS  NEAR balance unchanged: 0.002500 -> 0.002500
 
 (c) old way, funded: the buyer account (which holds NEAR) signs the same plain ft_transfer
-  PASS  succeeded, tx 9rLmbp2m76VgFdWxkp1Rp8g6X9QhjtCaQZSqHU6vpBKz  https://explorer.testnet.near.org/transactions/9rLmbp2m76VgFdWxkp1Rp8g6X9QhjtCaQZSqHU6vpBKz
+  PASS  succeeded, tx 9rLmbp2m76VgFdWxkp1Rp8g6X9QhjtCaQZSqHU6vpBKz  https://testnet.near.rocks/tx/9rLmbp2m76VgFdWxkp1Rp8g6X9QhjtCaQZSqHU6vpBKz
   PASS  it cost the signer NEAR for gas: 0.000263 NEAR
 
 # all checks passed
