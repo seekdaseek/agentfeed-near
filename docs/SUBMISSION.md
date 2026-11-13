@@ -20,7 +20,7 @@ Built to fail safely: data is fetched before settlement, the signed relayer tran
 
 How NEAR fits: NEP-141 USDC (a stablecoin rail), NEP-366 meta transactions, NEP-145 storage registration, sponsored gas. Tracks: agents (agents pay for data) and realworld (a per-call merchant rail on stablecoins where the payer needs no gas).
 
-Honest status: AgentFeed is an existing product (Solana, Base); only this NEAR integration was built in the window. It runs on NEAR testnet and every payment so far came from the builder's own accounts: as of 2026-11-13 08:25Z, 278 settled calls and 5.40 USDC, 0 independent payers. The builder's second entry is StakeStreak on NEAR. Live: https://near.ochinimus.app
+Honest status: AgentFeed is an existing product (Solana, Base); only this NEAR integration was built for this hackathon, after its announcement. It runs on NEAR testnet and every payment so far came from the builder's own accounts: as of 2026-11-13 08:25Z, 278 settled calls and 5.40 USDC, 0 independent payers. The builder's second entry is StakeStreak on NEAR. Live: https://near.ochinimus.app
 ```
 <!-- idea:end -->
 
