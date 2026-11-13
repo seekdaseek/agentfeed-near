@@ -1,0 +1,2 @@
+timestamp_utc,from,to,amount_usdc,tx_hash,note
+2026-11-13T07:44:47Z,agentfeed-near-treasury.testnet,agentfeed-near-buyer.testnet,4.00,7FayDUBYhd4tYwNbqHHahtxKW1L8ZdQ4MNi8Rf23hcg,recycle to our own batch buyer; its USDC ran out on 2026-11-11 (insufficient_funds in batch.log)

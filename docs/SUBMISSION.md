@@ -20,7 +20,7 @@ Built to fail safely: data is fetched before settlement, the signed relayer tran
 
 How NEAR fits: NEP-141 USDC (a stablecoin rail), NEP-366 meta transactions, NEP-145 storage registration, sponsored gas. Tracks: agents (agents pay for data) and realworld (a per-call merchant rail on stablecoins where the payer needs no gas).
 
-Honest status: AgentFeed is an existing product (Solana, Base); only this NEAR integration was built in the window. It runs on NEAR testnet and every payment so far came from the builder's own accounts. The builder's second entry is StakeStreak on NEAR. Live: https://near.ochinimus.app
+Honest status: AgentFeed is an existing product (Solana, Base); only this NEAR integration was built in the window. It runs on NEAR testnet and every payment so far came from the builder's own accounts: as of 2026-11-13 08:25Z, 278 settled calls and 5.40 USDC, 0 independent payers. The builder's second entry is StakeStreak on NEAR. Live: https://near.ochinimus.app
 ```
 <!-- idea:end -->
 
@@ -47,11 +47,11 @@ The validator checks every rule of the contract (lengths, `size` literal, track 
 
 A 409 means the repository was already submitted or the email has two submissions: ask the owner, never change the link or email to get around it. Outside 2026-11-01 to 2026-11-14 the API answers 403: tell the owner, do not retry.
 
-## 4. Draft of the X post (the owner writes and posts it; the rules say it must state the project was built at NEAR HACKATHON and carry the video or screenshots)
+## 4. Draft of the X post (the owner posts it; the rules say it must state the project was built at NEAR HACKATHON, tag @NEARProtocol and #NEARHackathon, and carry the video or screenshots)
 
 <!-- post:start -->
 ```
-Built at NEAR HACKATHON: agentfeed-near. AI agents pay for market data in USDC on NEAR by signing one delegate action; the gateway relays it and pays gas, so agents need no NEAR. kill -9 mid-payment: charged once or not at all. Testnet. near.ochinimus.app [video] [repo]
+Built at NEAR HACKATHON: AgentFeed on NEAR. Agents pay for data in USDC with one signed delegate action; the relayer pays gas, so agents hold no NEAR. Kill -9 mid-payment: charged once or not at all. Testnet, 278 calls so far. https://github.com/seekdaseek/agentfeed-near @NEARProtocol #NEARHackathon
 ```
 <!-- post:end -->
 
@@ -66,7 +66,7 @@ Built at NEAR HACKATHON: agentfeed-near. AI agents pay for market data in USDC o
 | a stock client pays us unmodified | `test/interop.test.js`; `scripts/stock-client.mjs` against the live URL | `AGENT_ACCOUNT_ID=you.testnet node scripts/stock-client.mjs` |
 | a second independent library pays us | `evidence/fastnear-client-20261029.txt`, `scripts/fastnear-client.mjs` | `npm install --no-save @fastnear/x402` then run it |
 | first real call, with balances before and after | `evidence/phase1-prove-settle.txt` | open tx `CnkcxKjhLZaXWx7vCae52mJSssPVykEKUpNbdJuBhr4N` |
-| the gateway refuses bad payments before touching AgentFeed or spending gas | 15 named refusal tests in `test/gateway.test.js` | `npm test` (121 tests, no network) |
+| the gateway refuses bad payments before touching AgentFeed or spending gas | 15 named refusal tests in `test/gateway.test.js` | `npm test` (130 tests, no network) |
 | the same product on Mezo is not faster | `docs/RESULTS.md` latency table, `evidence/mezo-latency.json` | dated measurement of the Mezo gateway's ledger, method in the JSON |
 | the daily batch keeps the count growing | crontab line on the VPS, `/opt/agentfeed-near/batch.log` | `ssh` read of the log; first scheduled run 2026-10-30 08:12Z (see the report) |
 | listed where agents discover paid APIs | `docs/DISCOVERY.md` | `curl 'https://facilitator.ultravioletadao.xyz/discovery/resources?q=near.ochinimus'` |

@@ -1,15 +1,22 @@
 # agentfeed-near
 
-**AI agents buy [AgentFeed](https://x402.ochinimus.app) market data per call and pay in USDC on NEAR: the agent signs one NEP-366 delegate action, the gateway relays it and pays the gas, so the agent needs USDC only.** Live at https://near.ochinimus.app: **43 paid calls and 0.76 USDC settled on NEAR testnet through the deployed gateway as of 2026-10-29 14:15Z, every one a transaction you can open** (all from our own accounts, 0 independent payers; counted from the gateway's ledger at [`/payments.csv`](https://near.ochinimus.app/payments.csv) by `scripts/results.mjs` into [`docs/RESULTS.md`](docs/RESULTS.md), and re-read from the chain: 43 of 43 verified). The live number is at [`/stats`](https://near.ochinimus.app/stats).
+**AI agents buy [AgentFeed](https://x402.ochinimus.app) market data per call and pay in USDC on NEAR: the agent signs one NEP-366 delegate action, the gateway relays it and pays the gas, so the agent needs USDC only.** Live at https://near.ochinimus.app: **278 paid calls and 5.40 USDC settled on NEAR testnet through the deployed gateway as of 2026-11-13 08:25Z, every one a transaction you can open** (all from our own accounts, 0 independent payers; read from the gateway's ledger at [`/stats`](https://near.ochinimus.app/stats) and [`/payments.csv`](https://near.ochinimus.app/payments.csv)). The treasury holds 1.64 USDC, which is the ledger 5.40 plus the listed extras 0.24 minus the 4.00 recycled to the batch buyer. [`docs/RESULTS.md`](docs/RESULTS.md) is the 2026-10-29 snapshot (43 calls, 43 of 43 re-read from the chain): regenerating it for 278 rows hit the archival RPC's rate limit, so it was not refreshed.
 
-Built for NEAR HACKATHON, track `agents`. Testnet only: nothing here is on NEAR mainnet and the USDC has no dollar value.
+Built for NEAR HACKATHON, tracks `agents` and `realworld`. Testnet only: nothing here is on NEAR mainnet and the USDC has no dollar value.
 
 ## Prior work and what is new (disclosure)
 
 - **AgentFeed** (https://x402.ochinimus.app) is an existing product by the same builder: a paid crypto-data API for agents, live on Solana, Base and other chains. It is not part of this submission and was not changed.
 - **agentfeed-mezo** (https://github.com/seekdaseek/agentfeed-mezo) is the same idea for Mezo, built on Oct 25 for another hackathon. This repo reuses its architecture (separate gateway, 402 challenge, fetch-before-settle, sqlite replay ledger, `/stats`, `/payments.csv`, manifest, client, MCP server, evidence verifier) and none of its chain code. That reuse is the builder's own earlier work.
 - **New in the hackathon window, and the only thing judged:** everything in this repository: the NEAR payment path (x402 `exact` with NEP-366 delegate actions, verified with `@x402/near`, settled by our own relayer), the crash-safe payment state machine, the tests, the NEAR client and the scripts. First commit 2026-10-29.
-- **The other entry** of the same builder: **StakeStreak on NEAR** (track `social`, separate repo).
+- **The other entry** of the same builder: **StakeStreak on NEAR**, https://github.com/seekdaseek/stakestreak-near (track `social`). It is an independent project with its own repository; it names this one in its README.
+
+## What was built in the window (Q-003: the diff)
+
+- **This repository was created on 2026-10-29 for NEAR HACKATHON.** Its first commit is [`7b26248`](https://github.com/seekdaseek/agentfeed-near/commit/7b26248) (2026-10-29 14:22 +02:00). The announcement the window starts from is dated 2026-10-19 (https://x.com/nearprotocol/status/2112257967818997891, read from the live HACKATHON.md on 2026-11-13); the window ends 2026-11-14.
+- **It holds no pre-hackathon code.** Every commit here is dated 2026-10-29 or later, so there is no older history to separate and no `pre-hackathon` tag: the baseline of this repository is empty.
+- **The prior work is in separate repositories and was left unchanged:** AgentFeed, the product this gateway sits in front of, https://github.com/seekdaseek/agentfeed; and agentfeed-mezo, the same idea for Mezo, whose architecture this repository reuses and none of whose chain code it contains, https://github.com/seekdaseek/agentfeed-mezo.
+- **The diff:** every commit, [commits/hackathon-submission](https://github.com/seekdaseek/agentfeed-near/commits/hackathon-submission); everything after the first commit, [compare 7b26248...hackathon-submission](https://github.com/seekdaseek/agentfeed-near/compare/7b26248...hackathon-submission) (a compare view leaves out the first commit's own files; those are in [the first commit](https://github.com/seekdaseek/agentfeed-near/commit/7b26248)). The annotated tag `hackathon-submission` marks the commit that was submitted.
 
 ## Judge it in five minutes
 
@@ -21,8 +28,8 @@ Built for NEAR HACKATHON, track `agents`. Testnet only: nothing here is on NEAR 
                    "payTo": "agentfeed-near-treasury.testnet", "maxTimeoutSeconds": 60 }] }
    ```
 2. **See real settlements, no wallet.** Open [`/stats`](https://near.ochinimus.app/stats) and [`/payments.csv`](https://near.ochinimus.app/payments.csv), then click any `tx_url`. The explorer shows a transaction signed by the relayer whose `Delegate` action moves 0.01 to 0.05 USDC from the buyer to the treasury. [`/.well-known/x402`](https://near.ochinimus.app/.well-known/x402) lists the 8 routes.
-3. **Re-check the evidence against the chain yourself, no wallet:** `npm install && node scripts/verify-evidence.mjs` reads every ledger row from NEAR testnet RPC and prints `verifiedOnChain`, the treasury balance and whether it equals the ledger. Expected: [`evidence/phase2-verify-evidence.txt`](evidence/phase2-verify-evidence.txt).
-4. **Run the tests:** `npm install && npm test` (121 tests, no network, including a stock x402 client paying the gateway, the MCP server driven by a real MCP client, and the crash cases). Run on Node 22.23.1 (Mac and the Linux box) and 24.16. `NEAR_LIVE=1 npm test` adds 3 live control tests against testnet.
+3. **Re-check the evidence against the chain yourself, no wallet:** `npm install && node scripts/verify-evidence.mjs` re-reads the newest 30 ledger rows from NEAR testnet RPC (a few seconds) and prints `verifiedOnChain`, the treasury balance and whether it equals ledger plus listed extras minus the recorded outflow (`balanceMatches: true` expected). `node scripts/verify-evidence.mjs --all` re-reads every row and every extra from an archival node, which rate-limits: allow several minutes, it may need a rerun. The regular node keeps only a few days, so older rows need `--all`. An older full run: [`evidence/phase2-verify-evidence.txt`](evidence/phase2-verify-evidence.txt).
+4. **Run the tests:** `npm install && npm test` (130 tests, no network, including a stock x402 client paying the gateway, the MCP server driven by a real MCP client, and the crash cases). Run on Node 22.23.1 (Mac and the Linux box) and 24.16. `NEAR_LIVE=1 npm test` adds 3 live control tests against testnet.
 5. **Pay a call yourself** (needs a testnet account holding a little Circle testnet USDC, from [faucet.circle.com](https://faucet.circle.com); NEAR is needed once, 0.00125 NEAR for the token's `storage_deposit` registration, and never to pay):
    ```sh
    git clone https://github.com/seekdaseek/agentfeed-near && cd agentfeed-near && npm install
@@ -109,7 +116,9 @@ What the control does not cover: the old way also needs an account or key at eve
 
 [`docs/RESULTS.md`](docs/RESULTS.md) is written by `node scripts/results.mjs` from the public ledger: counts by route and day, payer accounts (and how many are independent of the builder: **0**), latency percentiles, a chain check of every row, treasury reconciliation, and the number that makes this project look bad, with the comparison against the same product on Mezo.
 
-A cron entry on the VPS buys two rounds of the 8 routes (16 calls, 0.32 USDC) every day at 08:12 UTC from the buyer account (`flock`, `timeout 900`, its own log), so the ledger keeps growing for the judging window. It was observed firing once, on a test minute (13:09Z, 16 of 16 calls ok); the 08:12 slot itself has not fired yet.
+A cron entry on the VPS buys two rounds of the 8 routes (16 calls, 0.32 USDC) every day at 08:12 UTC from the buyer account (`flock`, `timeout 900`, its own log), so the ledger keeps growing for the judging window. It settled 16 calls on each day from 2026-10-30 to 2026-11-10; on 2026-11-11 the buyer ran out of USDC after 7 calls, and on 2026-11-12 it settled nothing. The treasury refilled the buyer on 2026-11-13 (one hand-run batch and the 08:12 batch, 32 calls that day).
+
+**Record rule:** every USDC transfer out of the treasury (the recycle to the buyer) is listed in [`evidence/treasury-outflows.csv`](evidence/treasury-outflows.csv), checked against the chain by `scripts/verify-evidence.mjs`, and subtracted when the treasury balance is reconciled.
 
 ## Discovery, second client library, submission pack
 

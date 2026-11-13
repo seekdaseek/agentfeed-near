@@ -3,7 +3,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { checkTx, toAtomic } from '../src/evidence.js';
+import { checkTx, checkOutflow, toAtomic } from '../src/evidence.js';
 
 const real = JSON.parse(readFileSync(new URL('./fixtures/proof-tx.json', import.meta.url), 'utf8'));
 const ctx = { relayer: 'agentfeed-near-relayer.testnet', treasury: 'agentfeed-near-treasury.testnet', token: '3e2210e1184b45b64c8a434c0a7e7b23cc04ea7eb7a6c3c32520d03d4afcb8af' };
@@ -36,4 +36,24 @@ describe('toAtomic', () => {
     assert.equal(toAtomic('1.00'), 1_000_000n);
     assert.equal(toAtomic('0.05'), 50000n);
   });
+});
+
+// checkOutflow() against the REAL treasury -> buyer recycle (test/fixtures/outflow-tx.json, fetched from NEAR testnet RPC on 2026-11-13),
+// then against deliberately wrong records.
+describe('checkOutflow on the real treasury recycle transaction', () => {
+  const outReal = JSON.parse(readFileSync(new URL('./fixtures/outflow-tx.json', import.meta.url), 'utf8'));
+  const outRow = { from: ctx.treasury, to: 'agentfeed-near-buyer.testnet', amount_usdc: '4.00', tx_hash: '' };
+  outRow.tx_hash = outReal.transaction.hash;
+  test('the true record verifies', () => assert.deepEqual(checkOutflow(outReal, outRow, ctx), { ok: true, amount: 4_000_000n }));
+  test('a wrong amount is refused', () => assert.match(checkOutflow(outReal, { ...outRow, amount_usdc: '4.01' }, ctx).why, /args differ/));
+  test('a wrong recipient is refused', () => assert.match(checkOutflow(outReal, { ...outRow, to: 'someone.testnet' }, ctx).why, /args differ/));
+  test('a record that is not from the treasury is refused', () => assert.match(checkOutflow(outReal, { ...outRow, from: 'other.testnet' }, ctx).why, /not an outflow of the treasury/));
+  test('a different treasury is refused', () => assert.match(checkOutflow(outReal, outRow, { ...ctx, treasury: 'other.testnet' }).why, /not an outflow|signed by/));
+  test('a wrong token is refused', () => assert.match(checkOutflow(outReal, outRow, { ...ctx, token: 'usdc.fake.testnet' }).why, /does not target the USDC/));
+  test('an unknown transaction is refused', () => assert.match(checkOutflow(null, outRow, ctx).why, /not found/));
+  test('a failed receipt is refused', () => {
+    const t = structuredClone(outReal); t.receipts_outcome[0].outcome.status = { Failure: { x: 1 } };
+    assert.match(checkOutflow(t, outRow, ctx).why, /receipt failed|final status/);
+  });
+  test('a ledger payment (relayer-signed) is not an outflow', () => assert.match(checkOutflow(real, { ...outRow, tx_hash: real.transaction.hash }, ctx).why, /signed by/));
 });

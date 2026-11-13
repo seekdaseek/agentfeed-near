@@ -4,26 +4,32 @@
 // evidence/mezo-latency.json (a dated measurement, not recomputed here). A payer counts as independent only if it is not in evidence/own-accounts.txt.
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { execSync } from 'node:child_process';
-import { parseLedger, verifyRows, treasuryBalance, fmtUsdc, toAtomic } from '../src/evidence.js';
+import { parseLedger, verifyRows, verifyOutflows, treasuryBalance, fmtUsdc, toAtomic } from '../src/evidence.js';
 
 const arg = (n, d) => { const i = process.argv.indexOf(n); return i < 0 ? d : process.argv[i + 1]; };
 const GATEWAY = (arg('--gateway', process.env.GATEWAY_URL || 'https://near.ochinimus.app')).replace(/\/$/, '');
 const OUT = new URL(arg('--out', '../docs/RESULTS.md'), import.meta.url);
-const RPC = process.env.NEAR_RPC_URL || 'https://rpc.testnet.fastnear.com';
+// archival: the regular RPC node prunes transactions after a few days, so old ledger rows come back UNKNOWN_TRANSACTION after a long wait
+const RPC = process.env.NEAR_RPC_URL || 'https://archival-rpc.testnet.near.org';
+const STATE_RPC = process.env.NEAR_STATE_RPC_URL || 'https://rpc.testnet.fastnear.com'; // balances: current state, regular node
 const read = (p) => readFileSync(new URL(p, import.meta.url), 'utf8');
 
-const man = await (await fetch(`${GATEWAY}/.well-known/x402`)).json();
-const stats = await (await fetch(`${GATEWAY}/stats`)).json();
-const csv = await (await fetch(`${GATEWAY}/payments.csv`)).text();
+// every fetch: 10 s timeout, up to 3 tries
+const get = async (u) => { for (let i = 0; ; i++) { try { return await fetch(u, { signal: AbortSignal.timeout(10000) }); } catch (e) { if (i === 2) throw e; } } };
+const man = await (await get(`${GATEWAY}/.well-known/x402`)).json();
+const stats = await (await get(`${GATEWAY}/stats`)).json();
+const csv = await (await get(`${GATEWAY}/payments.csv`)).text();
 const ctx = { relayer: man.relayer, treasury: man.payTo, token: man.asset.account };
 const rows = parseLedger(csv);
 const extras = existsSync(new URL('../evidence/known-extra-transfers.csv', import.meta.url)) ? parseLedger(read('../evidence/known-extra-transfers.csv')) : [];
 const own = new Set(read('../evidence/own-accounts.txt').split('\n').map((l) => l.replace(/#.*/, '').trim()).filter(Boolean));
+const outflows = existsSync(new URL('../evidence/treasury-outflows.csv', import.meta.url)) ? parseLedger(read('../evidence/treasury-outflows.csv')) : [];
 const mezo = JSON.parse(read('../evidence/mezo-latency.json'));
 
 const main = await verifyRows(rows, ctx, RPC);
 const ext = await verifyRows(extras, ctx, RPC);
-const bal = await treasuryBalance(ctx, RPC);
+const out = await verifyOutflows(outflows, ctx, RPC);
+const bal = await treasuryBalance(ctx, STATE_RPC);
 
 // ---- numbers
 const num = (v) => (v === '' || v == null ? null : Number(v));
@@ -41,8 +47,9 @@ const payers = group((r) => r.payer);
 const independent = payers.filter(([p]) => !own.has(p));
 const notDelivered = (stats.by_state || []).filter((s) => s.state !== 'delivered');
 let commit = 'unknown'; try { commit = execSync('git rev-parse --short HEAD', { cwd: new URL('..', import.meta.url), stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim(); } catch { /* not a git checkout */ }
-const verified = main.ok === rows.length && main.bad.length === 0;
-const reconciles = bal === main.total + ext.total;
+const verified = main.ok === rows.length && main.bad.length === 0 && out.bad.length === 0;
+const expectedBal = main.total + ext.total - out.total;
+const reconciles = bal === expectedBal;
 const medShare = pct(share, 0.5);
 
 const md = [];
@@ -81,8 +88,9 @@ w(`Every ledger row was looked up by transaction hash on NEAR testnet RPC (\`${R
 w();
 w(`- Ledger rows verified: **${main.ok} of ${rows.length}**${main.bad.length ? ` (FAILED: ${main.bad.length})` : ''}. Ledger total ${fmtUsdc(main.total)} USDC.`);
 w(`- Transfers into the treasury that are not in the deployed ledger (the Phase 1 proof, a local rehearsal, the live drill; listed in \`evidence/known-extra-transfers.csv\`): ${extras.length} listed, ${ext.ok} verified the same way, ${fmtUsdc(ext.total)} USDC.`);
-w(`- Treasury \`${ctx.treasury}\` USDC balance: **${fmtUsdc(bal)}**. Ledger plus listed extras: ${fmtUsdc(main.total + ext.total)}. **${reconciles ? 'They match exactly.' : `They differ by ${fmtUsdc(bal > main.total + ext.total ? bal - main.total - ext.total : main.total + ext.total - bal)} USDC (${bal > main.total + ext.total ? 'unlisted inbound transfers' : 'money left the treasury'}).`}**`);
-if (main.bad.length) { w(); for (const b of main.bad) w(`- FAILED ${b}`); }
+w(`- Transfers out of the treasury (the treasury recycling USDC to our own batch buyer, signed by the treasury; listed in \`evidence/treasury-outflows.csv\`): ${outflows.length} listed, ${out.ok} verified from the chain, ${fmtUsdc(out.total)} USDC.`);
+w(`- Treasury \`${ctx.treasury}\` USDC balance: **${fmtUsdc(bal)}**. Ledger plus listed extras minus listed outflows: ${fmtUsdc(expectedBal)}. **${reconciles ? 'They match exactly.' : `They differ by ${fmtUsdc(bal > expectedBal ? bal - expectedBal : expectedBal - bal)} USDC (${bal > expectedBal ? 'unlisted inbound transfers' : 'money left the treasury'}).`}**`);
+if (main.bad.length || out.bad.length) { w(); for (const b of [...main.bad, ...out.bad]) w(`- FAILED ${b}`); }
 w();
 w('## Latency');
 w();

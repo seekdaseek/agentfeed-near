@@ -1,6 +1,6 @@
-**Phase 4 (2026-10-29): 43 paid calls and 0.76 USDC settled on NEAR testnet through the deployed gateway at https://near.ochinimus.app, all from our own accounts (0 independent payers); 43 of 43 re-read from the chain, treasury reconciles exactly (`docs/RESULTS.md`, written by `scripts/results.mjs`).** A daily batch cron keeps the count growing.
+**Final (2026-11-13 08:25Z): 278 paid calls and 5.40 USDC settled on NEAR testnet through the deployed gateway at https://near.ochinimus.app, all from our own accounts (0 independent payers), read from `/stats`; treasury 1.64 USDC = ledger 5.40 + extras 0.24 - recorded outflow 4.00 (`evidence/treasury-outflows.csv`). `docs/RESULTS.md` is the 2026-10-29 snapshot (43 calls); regenerating it hit the archival RPC rate limit.**
 
-# NEAR HACKATHON, track `agents`: submission checklist
+# NEAR HACKATHON, tracks `agents` and `realworld`: submission checklist
 
 Project: **agentfeed-near**. Repo: https://github.com/seekdaseek/agentfeed-near (private until the owner flips it). Live: https://near.ochinimus.app (deployed 2026-10-29). MIT. Second entry of the same builder, named as the rules require: **StakeStreak on NEAR** (track `social`, separate repo).
 

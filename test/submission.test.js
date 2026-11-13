@@ -40,6 +40,9 @@ describe('docs/SUBMISSION.md', () => {
   });
   test('the X post draft fits 280 characters', () => {
     const post = md.split('<!-- post:start -->')[1]?.split('<!-- post:end -->')[0]?.trim().replace(/^```\w*\n|\n```$/g, '');
-    assert.ok(post && post.length <= 280, `post is ${post?.length} characters`);
+    const weighted = post.replace(/https?:\/\/\S+|\b[a-z.]+\.(app|com)\b/g, 'X'.repeat(23)).length; // X counts a link as 23
+    assert.ok(post && weighted <= 280, `post is ${weighted} characters`);
+    for (const must of ['Built at NEAR HACKATHON', '@NEARProtocol', '#NEARHackathon']) assert.ok(post.includes(must), `post lacks ${must}`);
+    assert.ok(!/[()\u2014]/.test(post), 'no parentheses or em dashes');
   });
 });

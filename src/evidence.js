@@ -46,28 +46,40 @@ export function parseLedger(text) {
   return rest.filter(Boolean).map((l) => Object.fromEntries(l.split(',').map((v, i) => [cols[i], v])));
 }
 
+// Runs fn over items with a few requests in flight at once (the archival node answers in about 3 s, so one at a time is minutes), keeping order.
+async function mapPool(items, n, fn) {
+  const out = new Array(items.length); let next = 0, done = 0;
+  await Promise.all(Array.from({ length: Math.min(n, items.length) }, async () => {
+    while (next < items.length) { const i = next++; out[i] = await fn(items[i]); if (++done % 25 === 0) console.error(`  ... ${done}/${items.length} rows`); }
+  }));
+  return out;
+}
+
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // Raw JSON-RPC, none of the gateway's code on the read path. Retries a transaction the node does not know yet; null when it never shows up.
 export async function rpc(rpcUrl, method, params) {
-  for (let i = 0; i < 6; i++) {
+  let limited = 0;
+  for (let i = 0; i < 3; i++) {
     try {
-      const r = await (await fetch(rpcUrl, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }), signal: AbortSignal.timeout(20000) })).json();
+      const r = await (await fetch(rpcUrl, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }), signal: AbortSignal.timeout(10000) })).json();
       if (r.result) return r.result;
+      // the archival node rate-limits bursts: back off and try again without using up a try
+      if (r.error?.code === -429 && ++limited <= 8) { await sleep(1500 * limited); i--; continue; }
       if (r.error?.cause?.name === 'UNKNOWN_TRANSACTION') { await sleep(500); continue; }
-      if (i === 5) return null;
+      if (i === 2) return null;
     } catch { await sleep(500); }
   }
   return null;
 }
 
 export async function verifyRows(rows, ctx, rpcUrl) {
-  let ok = 0, total = 0n; const bad = [];
-  for (const row of rows) {
+  const res = await mapPool(rows, 8, async (row) => {
     const result = await rpc(rpcUrl, 'tx', { tx_hash: row.tx_hash, sender_account_id: ctx.relayer, wait_until: 'FINAL' });
-    const c = checkTx(result, row, ctx);
-    if (c.ok) { ok++; total += c.amount; } else bad.push(`${row.tx_hash}: ${c.why}`);
-  }
+    return { row, c: checkTx(result, row, ctx) };
+  });
+  let ok = 0, total = 0n; const bad = [];
+  for (const { row, c } of res) { if (c.ok) { ok++; total += c.amount; } else bad.push(`${row.tx_hash}: ${c.why}`); }
   return { ok, total, bad };
 }
 
@@ -77,3 +89,42 @@ export async function treasuryBalance(ctx, rpcUrl) {
 }
 
 export const fmtUsdc = (a) => `${a / 1_000_000n}.${String(a % 1_000_000n).padStart(6, '0')}`;
+
+// ---- outflows: USDC that left the treasury
+
+// The batch buyer spends USDC that lands in the treasury, so the treasury recycles it to the buyer with one plain ft_transfer that the
+// treasury itself signs (evidence/treasury-outflows.csv: timestamp_utc,from,to,amount_usdc,tx_hash,note). Each outflow is verified from the
+// chain the same way as a ledger row, and verify-evidence / results.mjs subtract the verified total: balance = ledger + extras - outflows.
+export function checkOutflow(result, row, ctx) {
+  const fail = (why) => ({ ok: false, why });
+  if (!result) return fail('transaction not found');
+  if (result.final_execution_status !== 'FINAL') return fail(`not final: ${result.final_execution_status}`);
+  const tx = result.transaction;
+  if (tx.hash !== row.tx_hash) return fail('hash mismatch');
+  if (row.from !== ctx.treasury) return fail('the record is not an outflow of the treasury');
+  if (tx.signer_id !== ctx.treasury) return fail(`signed by ${tx.signer_id}, expected the treasury ${ctx.treasury}`);
+  if (tx.receiver_id !== ctx.token) return fail('transaction does not target the USDC contract');
+  if (tx.actions.length !== 1 || !tx.actions[0].FunctionCall) return fail('not a single function call');
+  const fc = tx.actions[0].FunctionCall;
+  if (fc.method_name !== 'ft_transfer' || String(fc.deposit) !== '1') return fail('call is not ft_transfer with 1 yocto');
+  const args = JSON.parse(Buffer.from(fc.args, 'base64').toString());
+  const want = toAtomic(row.amount_usdc);
+  if (args.receiver_id !== row.to || BigInt(args.amount) !== want) return fail('ft_transfer args differ from the record');
+  if (!('SuccessValue' in result.status)) return fail('final status is not SuccessValue');
+  for (const r of result.receipts_outcome) if (r.outcome.status.Failure) return fail('a receipt failed');
+  const tokenReceipt = result.receipts_outcome.find((r) => r.outcome.executor_id === ctx.token);
+  if (!tokenReceipt || !('SuccessValue' in tokenReceipt.outcome.status)) return fail('token receipt missing or not successful');
+  const ev = parseTransferEvents(tokenReceipt.outcome.logs).filter((e) => e.from === ctx.treasury && e.to === row.to && BigInt(e.amount) === want);
+  if (ev.length !== 1) return fail('no single NEP-141 ft_transfer event treasury -> recipient for the recorded amount');
+  return { ok: true, amount: want };
+}
+
+export async function verifyOutflows(rows, ctx, rpcUrl) {
+  const res = await mapPool(rows, 8, async (row) => {
+    const result = await rpc(rpcUrl, 'tx', { tx_hash: row.tx_hash, sender_account_id: ctx.treasury, wait_until: 'FINAL' });
+    return { row, c: checkOutflow(result, row, ctx) };
+  });
+  let ok = 0, total = 0n; const bad = [];
+  for (const { row, c } of res) { if (c.ok) { ok++; total += c.amount; } else bad.push(`${row.tx_hash}: ${c.why}`); }
+  return { ok, total, bad };
+}

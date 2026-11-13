@@ -1,4 +1,4 @@
-// Validates a NEAR HACKATHON submission payload against the contract in https://nearhackathon.com/HACKATHON.md (read 2026-10-29) and prints
+// Validates a NEAR HACKATHON submission payload against the contract in https://nearhackathon.com/HACKATHON.md (re-read live 2026-11-13: eleven fields, no website) and prints
 // the curl command. It NEVER sends anything: the owner confirms the printed payload and runs the command himself.
 //   node scripts/check-submission.mjs --template                  prints a payload skeleton with <OWNER: ...> placeholders (invalid on purpose)
 //   node scripts/check-submission.mjs path/to/payload.json [--online]   keep the payload file OUTSIDE the repository: it holds personal data
